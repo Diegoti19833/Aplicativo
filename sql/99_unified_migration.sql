@@ -98,16 +98,36 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- Normalizar roles existentes antes de aplicar constraint
-UPDATE users SET role = 'funcionario' WHERE lower(replace(role, 'á', 'a')) IN ('funcionário', 'funcionario', 'employee', 'func');
-UPDATE users SET role = 'gerente' WHERE lower(role) IN ('gerente', 'manager', 'ger');
-UPDATE users SET role = 'admin' WHERE lower(role) IN ('admin', 'administrador', 'administrator');
-UPDATE users SET role = 'caixa' WHERE lower(role) IN ('caixa', 'cashier');
--- Qualquer role que nao se encaixe vira funcionario
-UPDATE users SET role = 'funcionario' WHERE role NOT IN ('funcionario', 'gerente', 'admin', 'caixa');
+-- Primeiro: remover TODOS os check constraints da coluna role (nome pode variar)
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+    WHERE rel.relname = 'users'
+      AND nsp.nspname = 'public'
+      AND con.contype = 'c'
+      AND pg_get_constraintdef(con.oid) ILIKE '%role%'
+  LOOP
+    EXECUTE 'ALTER TABLE users DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname);
+    RAISE NOTICE 'Dropped constraint: %', r.conname;
+  END LOOP;
+END $$;
 
--- Atualizar CHECK constraint de role para incluir todos os valores
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+-- Agora normalizar roles existentes (sem constraint bloqueando)
+-- Usa translate() nativo para remover acentos (sem precisar da extensao unaccent)
+UPDATE users SET role = 'funcionario' WHERE lower(translate(role, 'áàãâéèêíìóòõôúùüçÁÀÃÂÉÈÊÍÌÓÒÕÔÚÙÜÇ', 'aaaaeeeiiooooouucAAAAEEEIIOOOOUUUC')) ILIKE '%funcion%';
+UPDATE users SET role = 'gerente' WHERE lower(translate(role, 'áàãâéèêíìóòõôúùüçÁÀÃÂÉÈÊÍÌÓÒÕÔÚÙÜÇ', 'aaaaeeeiiooooouucAAAAEEEIIOOOOUUUC')) ILIKE '%gerente%' OR lower(role) = 'manager';
+UPDATE users SET role = 'admin' WHERE lower(translate(role, 'áàãâéèêíìóòõôúùüçÁÀÃÂÉÈÊÍÌÓÒÕÔÚÙÜÇ', 'aaaaeeeiiooooouucAAAAEEEIIOOOOUUUC')) ILIKE '%admin%';
+UPDATE users SET role = 'caixa' WHERE lower(translate(role, 'áàãâéèêíìóòõôúùüçÁÀÃÂÉÈÊÍÌÓÒÕÔÚÙÜÇ', 'aaaaeeeiiooooouucAAAAEEEIIOOOOUUUC')) ILIKE '%caixa%' OR lower(role) = 'cashier';
+-- Qualquer role que AINDA nao se encaixe vira funcionario
+UPDATE users SET role = 'funcionario' WHERE role IS NULL OR role NOT IN ('funcionario', 'gerente', 'admin', 'caixa');
+
+-- Aplicar novo CHECK constraint
 ALTER TABLE users ADD CONSTRAINT users_role_check
   CHECK (role IN ('funcionario', 'gerente', 'admin', 'caixa'));
 
