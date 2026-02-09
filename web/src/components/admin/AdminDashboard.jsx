@@ -205,6 +205,7 @@ export default function AdminDashboard() {
     if (r === 'admin') return 'Admin';
     if (r === 'gerente') return 'Gerente';
     if (r === 'caixa') return 'Caixa';
+    if (r === 'franqueado') return 'Franqueado';
     return 'Funcionario';
   };
 

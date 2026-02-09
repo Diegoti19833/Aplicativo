@@ -32,6 +32,7 @@ export default function AdminRanking() {
     if (r === 'admin') return 'Admin';
     if (r === 'gerente') return 'Gerente';
     if (r === 'caixa') return 'Caixa';
+    if (r === 'franqueado') return 'Franqueado';
     return 'Funcionario';
   };
 
@@ -40,6 +41,7 @@ export default function AdminRanking() {
     if (r === 'admin') return { bg: '#FEF3C7', color: '#D97706' };
     if (r === 'gerente') return { bg: '#DBEAFE', color: '#2563EB' };
     if (r === 'caixa') return { bg: '#E0E7FF', color: '#4F46E5' };
+    if (r === 'franqueado') return { bg: '#FCE7F3', color: '#DB2777' };
     return { bg: '#D1FAE5', color: '#059669' };
   };
 

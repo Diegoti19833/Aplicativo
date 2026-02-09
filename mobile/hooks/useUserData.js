@@ -33,7 +33,7 @@ export const useUserData = () => {
       // Se não há dados do usuário, criar um registro inicial
       if (!data) {
         const metaRole = user.user_metadata?.role;
-        const validRoles = ['funcionario', 'gerente', 'admin', 'caixa'];
+        const validRoles = ['funcionario', 'gerente', 'admin', 'caixa', 'franqueado'];
         const userRole = validRoles.includes(metaRole) ? metaRole : 'funcionario';
 
         const newUserData = {

@@ -18,6 +18,7 @@ export default function AdminUsers() {
     if (r === 'admin') return 'Admin';
     if (r === 'gerente') return 'Gerente';
     if (r === 'caixa') return 'Caixa';
+    if (r === 'franqueado') return 'Franqueado';
     return 'Funcionário';
   };
 
@@ -109,6 +110,7 @@ export default function AdminUsers() {
             <option>Gerente</option>
             <option>Funcionário</option>
             <option>Caixa</option>
+            <option>Franqueado</option>
           </select>
         </div>
 
@@ -197,6 +199,7 @@ export default function AdminUsers() {
                     <option value="gerente">Gerente</option>
                     <option value="admin">Admin</option>
                     <option value="caixa">Caixa</option>
+                    <option value="franqueado">Franqueado</option>
                   </select>
                 </td>
               </tr>
@@ -231,6 +234,7 @@ export default function AdminUsers() {
                   <option>Funcionário</option>
                   <option>Gerente</option>
                   <option>Caixa</option>
+                  <option>Franqueado</option>
                 </select>
               </div>
               <button onClick={handleCreateUser} disabled={saving} className="btn-primary" style={{ marginTop: 8, justifyContent: 'center' }}>
