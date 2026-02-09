@@ -432,66 +432,127 @@ function DashboardScreen({ navigate }) {
     return (
       <SafeAreaView style={styles.containerAlt}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.card}>
-            <Text style={styles.subtitle}>Carregando dashboard...</Text>
+          <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
+            <Text style={{ fontSize: 32 }}>🐾</Text>
+            <Text style={[styles.subtitle, { marginTop: 8 }]}>Carregando dashboard...</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
     )
   }
 
-  const totalXp = dashboardData?.stats?.total_xp ?? userData?.xp_total ?? 0
+  const totalXp = dashboardData?.stats?.total_xp ?? userData?.total_xp ?? userData?.xp_total ?? 0
   const level = dashboardData?.stats?.level ?? userData?.level ?? 1
+  const coins = dashboardData?.stats?.coins ?? userData?.coins ?? 0
+  const streak = dashboardData?.stats?.current_streak ?? userData?.current_streak ?? userData?.streak_days ?? 0
+  const maxStreak = dashboardData?.stats?.max_streak ?? userData?.max_streak ?? 0
+  const lessonsCount = dashboardData?.stats?.lessons_completed ?? userData?.lessons_completed ?? 0
+  const quizzesCount = dashboardData?.stats?.quizzes_completed ?? userData?.quizzes_completed ?? 0
+  const nextLevelXp = Math.pow((level + 1), 2) * 100
+  const xpProgress = nextLevelXp > 0 ? Math.min(100, (totalXp / nextLevelXp) * 100) : 0
 
   return (
     <SafeAreaView style={styles.containerAlt}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header com saudacao */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Olá, {userData?.name || 'Usuário'}! 👋</Text>
-            <Text style={styles.headerSubtitle}>Continue aprendendo</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>Ola, {userData?.name?.split(' ')[0] || 'Usuario'}! 👋</Text>
+            <Text style={styles.headerSubtitle}>Continue aprendendo hoje</Text>
           </View>
-          <View style={styles.headerIcon}>
-            <Text style={styles.headerIconEmoji}>🐾</Text>
-          </View>
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.title}>Seu progresso</Text>
-          <Text style={styles.subtitle}>
-            XP Total: {totalXp} • Nível: {level}
-          </Text>
-          <Text style={styles.subtitle}>
-            Sequência: {userData?.streak_days || 0} dias
-          </Text>
-          <Pressable style={styles.primaryButton} onPress={() => navigate('trilhas')}>
-            <Text style={styles.primaryButtonText}>Ir para trilhas</Text>
+          <Pressable onPress={() => navigate('perfil')} style={styles.avatarCircle}>
+            <Text style={{ fontSize: 20 }}>
+              {userData?.name ? userData.name.charAt(0).toUpperCase() : '?'}
+            </Text>
           </Pressable>
         </View>
-        <View style={styles.card}>
-          <Text style={styles.title}>Próximas aulas</Text>
-          <View style={styles.grid3}>
-            <Pressable style={styles.gridItem}>
-              <Text style={styles.gridIcon}>🐾</Text>
-              <Text style={styles.gridLabel}>Atendimento</Text>
-            </Pressable>
-            <Pressable style={styles.gridItem}>
-              <Text style={styles.gridIcon}>🛒</Text>
-              <Text style={styles.gridLabel}>Vendas</Text>
-            </Pressable>
-            <Pressable style={styles.gridItem}>
-              <Text style={styles.gridIcon}>🐶</Text>
-              <Text style={styles.gridLabel}>Produtos Pet</Text>
-            </Pressable>
+
+        {/* Card de nivel e XP */}
+        <LinearGradient
+          colors={['#0C3B8D', '#1C74D9']}
+          start={{x:0,y:0}} end={{x:1,y:0}}
+          style={[styles.card, { borderRadius: 20, padding: 20 }]}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600' }}>Nivel {level}</Text>
+              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', marginTop: 2 }}>{totalXp.toLocaleString()} XP</Text>
+              <View style={{ marginTop: 10, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' }}>
+                <View style={{ height: '100%', borderRadius: 4, backgroundColor: '#FFD700', width: `${xpProgress}%` }} />
+              </View>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 4 }}>
+                {totalXp}/{nextLevelXp} para nivel {level + 1}
+              </Text>
+            </View>
+            <View style={{ marginLeft: 20, alignItems: 'center' }}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#FFD700' }}>
+                <Text style={{ fontSize: 24, fontWeight: '800', color: '#FFD700' }}>{level}</Text>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Stats Row */}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14, marginTop: 0 }]}>
+            <Text style={{ fontSize: 22 }}>🪙</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#D97706', marginTop: 4 }}>{coins}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Moedas</Text>
+          </View>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14, marginTop: 0 }]}>
+            <Text style={{ fontSize: 22 }}>🔥</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#EF4444', marginTop: 4 }}>{streak}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Sequencia</Text>
+          </View>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14, marginTop: 0 }]}>
+            <Text style={{ fontSize: 22 }}>📚</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#0C3B8D', marginTop: 4 }}>{lessonsCount}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Aulas</Text>
+          </View>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14, marginTop: 0 }]}>
+            <Text style={{ fontSize: 22 }}>🧠</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#7C3AED', marginTop: 4 }}>{quizzesCount}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Quizzes</Text>
           </View>
         </View>
-        <View style={styles.card}>
-          <Text style={styles.title}>Conquistas</Text>
-          <View style={styles.grid3}>
-            <Text style={styles.badge}>🥇 Medalha Ouro</Text>
-            <Text style={styles.badge}>🔥 Série {userData?.streak_days || 0} dias</Text>
-            <Text style={styles.badge}>⭐ Destaque</Text>
+
+        {/* Missao do dia */}
+        <View style={[styles.card, { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 20 }}>🎯</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: '700', color: '#92400E', fontSize: 14 }}>Missao do Dia</Text>
+              <Text style={{ color: '#B45309', fontSize: 12, marginTop: 2 }}>Complete 1 aula para ganhar +20 XP e +5 moedas!</Text>
+            </View>
+            <Text style={{ fontSize: 16 }}>💰</Text>
           </View>
         </View>
+
+        {/* Acoes rapidas */}
+        <Text style={[styles.headerTitle, { fontSize: 18, marginTop: 16, marginBottom: 4 }]}>Acesso Rapido</Text>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Pressable style={[styles.card, { flex: 1, alignItems: 'center', padding: 16, marginTop: 8 }]} onPress={() => navigate('trilhas')}>
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 24 }}>📖</Text>
+            </View>
+            <Text style={{ fontWeight: '700', color: '#111', marginTop: 8, fontSize: 13 }}>Trilhas</Text>
+          </Pressable>
+          <Pressable style={[styles.card, { flex: 1, alignItems: 'center', padding: 16, marginTop: 8 }]} onPress={() => navigate('ranking')}>
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 24 }}>🏆</Text>
+            </View>
+            <Text style={{ fontWeight: '700', color: '#111', marginTop: 8, fontSize: 13 }}>Ranking</Text>
+          </Pressable>
+          <Pressable style={[styles.card, { flex: 1, alignItems: 'center', padding: 16, marginTop: 8 }]} onPress={() => navigate('loja')}>
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 24 }}>🛒</Text>
+            </View>
+            <Text style={{ fontWeight: '700', color: '#111', marginTop: 8, fontSize: 13 }}>Loja</Text>
+          </Pressable>
+        </View>
+
         <MascotCTA />
       </ScrollView>
     </SafeAreaView>
@@ -543,48 +604,69 @@ function RankingScreen() {
   const lessonsCount = myRanking?.lessons_completed || 0
   const quizzesCount = myRanking?.quizzes_completed || 0
 
+  const medalEmoji = position <= 1 ? '🥇' : position <= 2 ? '🥈' : position <= 3 ? '🥉' : '🏅'
+  const positionColor = position <= 1 ? '#FFD700' : position <= 2 ? '#C0C0C0' : position <= 3 ? '#CD7F32' : '#0C3B8D'
+
   return (
     <SafeAreaView style={styles.containerAlt}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Meu Ranking</Text>
-          <Text style={styles.subtitle}>Sua posicao entre {totalUsers} participantes</Text>
-        </View>
+        <Text style={[styles.headerTitle, { marginTop: 16, marginBottom: 4 }]}>Meu Ranking</Text>
+        <Text style={[styles.headerSubtitle, { marginBottom: 8 }]}>Sua posicao entre {totalUsers} participantes</Text>
 
-        <View style={[styles.card, { backgroundColor: '#e6f7ff', alignItems: 'center', paddingVertical: 24 }]}>
-          <Text style={{ fontSize: 48, fontWeight: 'bold', color: '#00924A' }}>{position}º</Text>
-          <Text style={[styles.title, { marginTop: 4 }]}>{myRanking?.name || userData?.name}</Text>
-          <Text style={styles.subtitle}>de {totalUsers} participantes</Text>
-        </View>
+        {/* Posicao destaque */}
+        <LinearGradient
+          colors={['#0C3B8D', '#1C74D9', '#5CD1F5']}
+          start={{x:0,y:0}} end={{x:1,y:1}}
+          style={[styles.card, { borderRadius: 20, padding: 24, alignItems: 'center' }]}
+        >
+          <Text style={{ fontSize: 44 }}>{medalEmoji}</Text>
+          <Text style={{ fontSize: 56, fontWeight: '900', color: '#FFD700', marginTop: 4 }}>{position}°</Text>
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', marginTop: 4 }}>{myRanking?.name || userData?.name}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: '600' }}>de {totalUsers} participantes</Text>
+          </View>
+        </LinearGradient>
 
-        <View style={styles.card}>
-          <Text style={[styles.title, { marginBottom: 12 }]}>Suas Estatisticas</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Text style={styles.subtitle}>XP Total</Text>
-            <Text style={styles.title}>{totalXp}</Text>
+        {/* Stats Grid */}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14, marginTop: 0 }]}>
+            <Text style={{ fontSize: 20 }}>⭐</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#D97706', marginTop: 4 }}>{totalXp.toLocaleString()}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>XP Total</Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Text style={styles.subtitle}>Nivel</Text>
-            <Text style={styles.title}>{level}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Text style={styles.subtitle}>Sequencia</Text>
-            <Text style={styles.title}>{streak} dias</Text>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Text style={styles.subtitle}>Aulas Concluidas</Text>
-            <Text style={styles.title}>{lessonsCount}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={styles.subtitle}>Quizzes Corretos</Text>
-            <Text style={styles.title}>{quizzesCount}</Text>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14, marginTop: 0 }]}>
+            <Text style={{ fontSize: 20 }}>🎯</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#0C3B8D', marginTop: 4 }}>{level}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Nivel</Text>
           </View>
         </View>
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 0 }}>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14 }]}>
+            <Text style={{ fontSize: 20 }}>🔥</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#EF4444', marginTop: 4 }}>{streak}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Dias seguidos</Text>
+          </View>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14 }]}>
+            <Text style={{ fontSize: 20 }}>📚</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#059669', marginTop: 4 }}>{lessonsCount}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Aulas</Text>
+          </View>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14 }]}>
+            <Text style={{ fontSize: 20 }}>🧠</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#7C3AED', marginTop: 4 }}>{quizzesCount}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Quizzes</Text>
+          </View>
+        </View>
 
-        <View style={styles.card}>
-          <Text style={styles.subtitle}>
-            Continue estudando para subir no ranking! Cada aula e quiz completado aumenta sua posicao.
-          </Text>
+        {/* Motivacao */}
+        <View style={[styles.card, { backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ fontSize: 28 }}>🚀</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: '700', color: '#166534', fontSize: 14 }}>Continue assim!</Text>
+              <Text style={{ color: '#15803D', fontSize: 12, marginTop: 2 }}>Cada aula e quiz completado melhora sua posicao no ranking.</Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -599,20 +681,20 @@ function PerfilScreen() {
   useEffect(() => {
     refetch()
   }, [])
-  
+
   const handleLogout = async () => {
     Alert.alert(
       'Logout',
       'Tem certeza que deseja sair?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Sair', 
+        {
+          text: 'Sair',
           style: 'destructive',
           onPress: async () => {
             const result = await signOut()
             if (!result.success) {
-              Alert.alert('Erro', 'Não foi possível fazer logout')
+              Alert.alert('Erro', 'Nao foi possivel fazer logout')
             }
           }
         }
@@ -624,33 +706,105 @@ function PerfilScreen() {
     return (
       <SafeAreaView style={styles.containerAlt}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.card}>
-            <Text style={styles.subtitle}>Carregando perfil...</Text>
+          <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
+            <Text style={{ fontSize: 32 }}>🐾</Text>
+            <Text style={[styles.subtitle, { marginTop: 8 }]}>Carregando perfil...</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
     )
   }
 
-  const totalXp = dashboardData?.stats?.total_xp ?? userData?.xp_total ?? 0
+  const totalXp = dashboardData?.stats?.total_xp ?? userData?.total_xp ?? userData?.xp_total ?? 0
   const level = dashboardData?.stats?.level ?? userData?.level ?? 1
+  const coins = dashboardData?.stats?.coins ?? userData?.coins ?? 0
+  const streak = dashboardData?.stats?.current_streak ?? userData?.current_streak ?? userData?.streak_days ?? 0
+  const maxStreak = userData?.max_streak ?? 0
+  const lessonsCount = userData?.lessons_completed ?? 0
+  const quizzesCount = userData?.quizzes_completed ?? 0
+  const roleLabelMap = { funcionario: 'Funcionario', gerente: 'Gerente', admin: 'Admin', caixa: 'Caixa', franqueado: 'Franqueado' }
+  const initials = (userData?.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
     <SafeAreaView style={styles.containerAlt}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Avatar e nome */}
+        <LinearGradient
+          colors={['#0C3B8D', '#1C74D9']}
+          start={{x:0,y:0}} end={{x:1,y:1}}
+          style={[styles.card, { borderRadius: 20, padding: 24, alignItems: 'center' }]}
+        >
+          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)' }}>
+            <Text style={{ fontSize: 28, fontWeight: '800', color: '#fff' }}>{initials}</Text>
+          </View>
+          <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginTop: 12 }}>{userData?.name || 'Usuario'}</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 2 }}>{user?.email}</Text>
+          <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20, marginTop: 8 }}>
+            <Text style={{ color: '#FFD700', fontWeight: '700', fontSize: 13 }}>{roleLabelMap[userData?.role] || userData?.role || 'N/A'}</Text>
+          </View>
+        </LinearGradient>
+
+        {/* Nivel e XP */}
         <View style={styles.card}>
-          <Text style={styles.title}>Perfil</Text>
-          <Text style={styles.subtitle}>Nome: {userData?.name || 'Usuário'}</Text>
-          <Text style={styles.subtitle}>E-mail: {user?.email || 'N/A'}</Text>
-          <Text style={styles.subtitle}>Papel: {userData?.role || 'N/A'}</Text>
-          <Text style={styles.subtitle}>XP Total: {totalXp}</Text>
-          <Text style={styles.subtitle}>Nível: {level}</Text>
-          <Text style={styles.subtitle}>Sequência: {userData?.streak_days || 0} dias</Text>
-          
-          <Pressable style={[styles.primaryButton, { marginTop: 20, backgroundColor: '#dc2626' }]} onPress={handleLogout}>
-            <Text style={styles.primaryButtonText}>Sair</Text>
-          </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Text style={{ fontWeight: '700', color: '#111', fontSize: 16 }}>Nivel {level}</Text>
+            <Text style={{ fontWeight: '600', color: '#6B7280', fontSize: 13 }}>{totalXp.toLocaleString()} XP total</Text>
+          </View>
+          <View style={{ height: 10, borderRadius: 5, backgroundColor: '#E5E7EB', overflow: 'hidden' }}>
+            <LinearGradient colors={['#0C3B8D', '#1C74D9']} start={{x:0,y:0}} end={{x:1,y:0}} style={{ height: '100%', borderRadius: 5, width: `${Math.min(100, (totalXp / Math.max(Math.pow((level + 1), 2) * 100, 1)) * 100)}%` }} />
+          </View>
         </View>
+
+        {/* Stats grid */}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 0 }}>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14 }]}>
+            <Text style={{ fontSize: 22 }}>🪙</Text>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: '#D97706', marginTop: 4 }}>{coins}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Moedas</Text>
+          </View>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14 }]}>
+            <Text style={{ fontSize: 22 }}>🔥</Text>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: '#EF4444', marginTop: 4 }}>{streak}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Sequencia</Text>
+          </View>
+          <View style={[styles.card, { flex: 1, alignItems: 'center', padding: 14 }]}>
+            <Text style={{ fontSize: 22 }}>🏅</Text>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: '#059669', marginTop: 4 }}>{maxStreak}</Text>
+            <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Max Streak</Text>
+          </View>
+        </View>
+
+        {/* Detalhes de progresso */}
+        <View style={styles.card}>
+          <Text style={{ fontWeight: '700', color: '#111', fontSize: 16, marginBottom: 14 }}>Progresso de Estudos</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ fontSize: 18 }}>📚</Text>
+              <Text style={{ color: '#374151', fontWeight: '600', fontSize: 14 }}>Aulas Concluidas</Text>
+            </View>
+            <Text style={{ fontWeight: '800', color: '#0C3B8D', fontSize: 16 }}>{lessonsCount}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ fontSize: 18 }}>🧠</Text>
+              <Text style={{ color: '#374151', fontWeight: '600', fontSize: 14 }}>Quizzes Corretos</Text>
+            </View>
+            <Text style={{ fontWeight: '800', color: '#7C3AED', fontSize: 16 }}>{quizzesCount}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ fontSize: 18 }}>⭐</Text>
+              <Text style={{ color: '#374151', fontWeight: '600', fontSize: 14 }}>XP Acumulado</Text>
+            </View>
+            <Text style={{ fontWeight: '800', color: '#D97706', fontSize: 16 }}>{totalXp.toLocaleString()}</Text>
+          </View>
+        </View>
+
+        {/* Botao sair */}
+        <Pressable style={[styles.card, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA' }]} onPress={handleLogout}>
+          <Text style={{ fontSize: 16 }}>🚪</Text>
+          <Text style={{ color: '#DC2626', fontWeight: '700', fontSize: 15 }}>Sair da Conta</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   )
@@ -954,29 +1108,44 @@ function LojaScreen() {
 
   const handlePurchase = async (item) => {
     if (!canAffordItem(item.id, userData?.coins || 0)) {
-      Alert.alert('Moedas insuficientes', `Você precisa de ${item.price} moedas para comprar este item.`)
+      Alert.alert('Moedas insuficientes', `Voce precisa de ${item.price} moedas para comprar este item.`)
       return
     }
-
     if (hasItem(item.id)) {
-      Alert.alert('Item já possui', 'Você já possui este item.')
+      Alert.alert('Item ja possui', 'Voce ja possui este item.')
       return
     }
+    Alert.alert(
+      'Confirmar Compra',
+      `Comprar ${item.name || item.title} por ${item.price} moedas?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Comprar', onPress: async () => {
+          const result = await purchaseItem(item.id)
+          if (result.success) {
+            Alert.alert('Compra realizada!', `Voce comprou ${item.name || item.title} por ${item.price} moedas.`)
+          } else {
+            Alert.alert('Erro na compra', result.error || 'Nao foi possivel realizar a compra.')
+          }
+        }}
+      ]
+    )
+  }
 
-    const result = await purchaseItem(item.id)
-    if (result.success) {
-      Alert.alert('Compra realizada!', `Você comprou ${item.name} por ${item.price} moedas.`)
-    } else {
-      Alert.alert('Erro na compra', result.error || 'Não foi possível realizar a compra.')
-    }
+  const rarityConfig = {
+    common: { bg: '#E5E7EB', color: '#374151', label: 'Comum' },
+    rare: { bg: '#DBEAFE', color: '#1D4ED8', label: 'Raro' },
+    epic: { bg: '#EDE9FE', color: '#7C3AED', label: 'Epico' },
+    legendary: { bg: '#FEF3C7', color: '#D97706', label: 'Lendario' },
   }
 
   if (loading) {
     return (
       <SafeAreaView style={styles.containerAlt}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.card}>
-            <Text style={styles.subtitle}>Carregando loja...</Text>
+          <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
+            <Text style={{ fontSize: 32 }}>🛒</Text>
+            <Text style={[styles.subtitle, { marginTop: 8 }]}>Carregando loja...</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -986,42 +1155,73 @@ function LojaScreen() {
   return (
     <SafeAreaView style={styles.containerAlt}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Loja</Text>
-          <Text style={styles.subtitle}>Suas moedas: {userData?.coins || 0} 🪙</Text>
-        </View>
-        
-        {items.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title}>{item.name}</Text>
-                <Text style={styles.subtitle}>{item.description}</Text>
-                <Text style={styles.subtitle}>Preço: {item.price} 🪙</Text>
-              </View>
-              <Pressable 
-                style={[
-                  styles.primaryButton, 
-                  { 
-                    backgroundColor: hasItem(item.id) ? '#6b7280' : 
-                                   canAffordItem(item.id, userData?.coins || 0) ? '#00924A' : '#dc2626',
-                    minWidth: 80
-                  }
-                ]} 
-                onPress={() => handlePurchase(item)}
-                disabled={hasItem(item.id)}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {hasItem(item.id) ? 'Possui' : 'Comprar'}
-                </Text>
-              </Pressable>
-            </View>
+        {/* Header com saldo */}
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>Loja 🛒</Text>
+            <Text style={styles.headerSubtitle}>Troque suas moedas por premios</Text>
           </View>
-        ))}
-        
+          <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 18 }}>🪙</Text>
+            <Text style={{ fontWeight: '800', color: '#D97706', fontSize: 16 }}>{userData?.coins || 0}</Text>
+          </View>
+        </View>
+
+        {items.map((item) => {
+          const rarity = rarityConfig[item.rarity] || rarityConfig.common
+          const owned = hasItem(item.id)
+          const canBuy = canAffordItem(item.id, userData?.coins || 0)
+
+          return (
+            <View key={item.id} style={[styles.card, { overflow: 'hidden' }]}>
+              <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+                {/* Icon */}
+                <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: rarity.bg, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 28 }}>{item.icon || '🎁'}</Text>
+                </View>
+                {/* Info */}
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontWeight: '700', color: '#111', fontSize: 15 }}>{item.name || item.title}</Text>
+                    <View style={{ backgroundColor: rarity.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: rarity.color }}>{rarity.label}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 2 }}>{item.description}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
+                    <Text style={{ fontSize: 14 }}>🪙</Text>
+                    <Text style={{ fontWeight: '800', color: '#D97706', fontSize: 15 }}>{item.price}</Text>
+                  </View>
+                </View>
+                {/* Button */}
+                <Pressable
+                  style={{
+                    backgroundColor: owned ? '#9CA3AF' : canBuy ? '#0C3B8D' : '#EF4444',
+                    paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12,
+                    opacity: owned ? 0.7 : 1
+                  }}
+                  onPress={() => handlePurchase(item)}
+                  disabled={owned}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>
+                    {owned ? '✓ Possui' : canBuy ? 'Comprar' : '✕ Sem moedas'}
+                  </Text>
+                </Pressable>
+              </View>
+              {item.stock_quantity != null && (
+                <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={{ fontSize: 10, color: '#EF4444', fontWeight: '700' }}>Estoque limitado: {item.stock_quantity} restantes</Text>
+                </View>
+              )}
+            </View>
+          )
+        })}
+
         {items.length === 0 && (
-          <View style={styles.card}>
-            <Text style={styles.subtitle}>Nenhum item disponível na loja.</Text>
+          <View style={[styles.card, { alignItems: 'center', paddingVertical: 32 }]}>
+            <Text style={{ fontSize: 40 }}>🏪</Text>
+            <Text style={{ fontWeight: '700', color: '#374151', marginTop: 8 }}>Loja Vazia</Text>
+            <Text style={{ color: '#6B7280', fontSize: 13, marginTop: 4 }}>Nenhum item disponivel no momento.</Text>
           </View>
         )}
       </ScrollView>
@@ -1429,6 +1629,16 @@ const styles = StyleSheet.create({
     height: 40,
     fontSize: 14,
     color: '#111',
+  },
+  avatarCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#C7D2FE',
   },
   forgotLink: {
     alignSelf: 'center',

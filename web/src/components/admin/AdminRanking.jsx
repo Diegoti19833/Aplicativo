@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, Medal, Search, Download } from 'lucide-react';
+import { Trophy, Search, Download, TrendingUp, Flame, BookOpen, Brain } from 'lucide-react';
 import { AdminDb } from '../../services/adminDb';
 
 export default function AdminRanking() {
@@ -74,97 +74,132 @@ export default function AdminRanking() {
   };
 
   if (loading) {
-    return <div style={{ padding: 32, textAlign: 'center', color: '#6B7280' }}>Carregando ranking...</div>;
+    return (
+      <div style={{ padding: 32, textAlign: 'center', color: '#6B7280' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🏆</div>
+        Carregando ranking...
+      </div>
+    );
   }
 
+  const podiumOrder = ranking.length >= 3 ? [ranking[1], ranking[0], ranking[2]] : ranking.slice(0, 3);
+  const podiumHeights = [140, 180, 120];
+  const podiumColors = [
+    { bg: 'linear-gradient(135deg, #94A3B8, #CBD5E1)', border: '#94A3B8', medal: '🥈' },
+    { bg: 'linear-gradient(135deg, #F59E0B, #FCD34D)', border: '#F59E0B', medal: '🥇' },
+    { bg: 'linear-gradient(135deg, #CD7F32, #DDA15E)', border: '#CD7F32', medal: '🥉' },
+  ];
+
   return (
-    <div style={{ padding: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+    <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 4 }}>
-            <Trophy size={24} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#111827', marginBottom: 4, letterSpacing: '-0.02em' }}>
             Ranking Completo
           </h1>
-          <p style={{ color: '#6B7280' }}>{total} usuarios no ranking</p>
+          <p style={{ color: '#6B7280', fontSize: 14 }}>{total} usuarios participando</p>
         </div>
-        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#059669', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+        <button onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #059669, #10B981)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 13, boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}>
           <Download size={16} /> Exportar CSV
         </button>
       </div>
 
-      {/* Top 3 cards */}
+      {/* Podium */}
       {ranking.length >= 3 && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
-          {ranking.slice(0, 3).map((u, i) => (
-            <div key={u.id} className="card" style={{ textAlign: 'center', padding: 20, border: i === 0 ? '2px solid #F59E0B' : '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: 40, marginBottom: 8 }}>{positionIcon(i + 1)}</div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>{u.name}</div>
-              <div style={{ color: '#6B7280', fontSize: 13 }}>{roleLabel(u.role)}</div>
-              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 16 }}>
-                <div><div style={{ fontWeight: 700, color: '#0047AB' }}>{u.total_xp}</div><div style={{ fontSize: 11, color: '#9CA3AF' }}>XP</div></div>
-                <div><div style={{ fontWeight: 700, color: '#059669' }}>{u.level}</div><div style={{ fontSize: 11, color: '#9CA3AF' }}>Nivel</div></div>
-                <div><div style={{ fontWeight: 700, color: '#D97706' }}>{u.current_streak}</div><div style={{ fontSize: 11, color: '#9CA3AF' }}>Streak</div></div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 12, marginBottom: 32, padding: '20px 0' }}>
+          {podiumOrder.map((u, i) => {
+            const pc = podiumColors[i];
+            return (
+              <div key={u.id} style={{ textAlign: 'center', width: 180 }}>
+                <div style={{ fontSize: 36, marginBottom: 8 }}>{pc.medal}</div>
+                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'U')}&background=${pc.border.replace('#','')}&color=fff&size=64&bold=true`} alt="" style={{ width: 56, height: 56, borderRadius: '50%', border: `3px solid ${pc.border}`, marginBottom: 8 }} />
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#1F2937', marginBottom: 2 }}>{u.name}</div>
+                <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8 }}>{u.total_xp?.toLocaleString()} XP</div>
+                <div style={{ background: pc.bg, height: podiumHeights[i], borderRadius: '12px 12px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: '#fff' }}>Lv.{u.level}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{u.lessons_completed} aulas</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Search */}
-      <div style={{ display: 'flex', alignItems: 'center', background: '#fff', padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb', marginBottom: 16, maxWidth: 400 }}>
-        <Search size={18} color="#9CA3AF" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar por nome ou email..."
-          style={{ border: 'none', background: 'transparent', marginLeft: 10, outline: 'none', fontSize: 14, width: '100%' }}
-        />
+      {/* Search and stats bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', background: '#fff', padding: '10px 16px', borderRadius: 12, border: '1px solid #e5e7eb', flex: 1, maxWidth: 400, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <Search size={18} color="#9CA3AF" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar por nome ou email..."
+            style={{ border: 'none', background: 'transparent', marginLeft: 10, outline: 'none', fontSize: 14, width: '100%', color: '#1F2937' }}
+          />
+        </div>
+        <div style={{ fontSize: 13, color: '#6B7280', fontWeight: 500 }}>
+          {filtered.length} de {ranking.length} usuarios
+        </div>
       </div>
 
       {/* Table */}
-      <div className="card" style={{ overflow: 'auto' }}>
+      <div className="card" style={{ overflow: 'auto', padding: 0 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid #f3f4f6' }}>
-              <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>#</th>
-              <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>USUARIO</th>
-              <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>FUNCAO</th>
-              <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>XP</th>
-              <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>NIVEL</th>
-              <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>COINS</th>
-              <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>STREAK</th>
-              <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>AULAS</th>
-              <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280', fontWeight: 600 }}>QUIZZES</th>
+            <tr style={{ background: '#F9FAFB' }}>
+              <th style={{ textAlign: 'center', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>#</th>
+              <th style={{ textAlign: 'left', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuario</th>
+              <th style={{ textAlign: 'left', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Funcao</th>
+              <th style={{ textAlign: 'right', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>XP</th>
+              <th style={{ textAlign: 'right', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Nivel</th>
+              <th style={{ textAlign: 'right', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Coins</th>
+              <th style={{ textAlign: 'right', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Streak</th>
+              <th style={{ textAlign: 'right', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aulas</th>
+              <th style={{ textAlign: 'right', padding: '14px 12px', fontSize: 11, color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quizzes</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(u => {
+            {filtered.map((u, idx) => {
               const badge = roleBadgeColor(u.role);
+              const isTop3 = u.position <= 3;
               return (
-                <tr key={u.id} style={{ borderBottom: '1px solid #f9fafb' }}>
-                  <td style={{ padding: '12px 8px', fontWeight: 700, fontSize: 16 }}>{positionIcon(u.position)}</td>
-                  <td style={{ padding: '12px 8px' }}>
-                    <div style={{ fontWeight: 500 }}>{u.name}</div>
-                    <div style={{ fontSize: 12, color: '#9CA3AF' }}>{u.email}</div>
+                <tr key={u.id} style={{ borderBottom: '1px solid #f3f4f6', background: isTop3 ? '#FFFBEB' : idx % 2 === 0 ? '#fff' : '#FAFAFA', transition: 'background 0.15s' }}>
+                  <td style={{ padding: '14px 12px', textAlign: 'center', fontWeight: 700, fontSize: isTop3 ? 20 : 14 }}>{positionIcon(u.position)}</td>
+                  <td style={{ padding: '14px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'U')}&background=0047AB&color=fff&size=36&bold=true`} alt="" style={{ width: 36, height: 36, borderRadius: '50%' }} />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: '#1F2937' }}>{u.name}</div>
+                        <div style={{ fontSize: 12, color: '#9CA3AF' }}>{u.email}</div>
+                      </div>
+                    </div>
                   </td>
-                  <td style={{ padding: '12px 8px' }}>
-                    <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: badge.bg, color: badge.color, fontWeight: 600 }}>
+                  <td style={{ padding: '14px 12px' }}>
+                    <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: badge.bg, color: badge.color, fontWeight: 700 }}>
                       {roleLabel(u.role)}
                     </span>
                   </td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 600 }}>{u.total_xp?.toLocaleString()}</td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right' }}>{u.level}</td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right' }}>{u.coins?.toLocaleString()}</td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right' }}>{u.current_streak}</td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right' }}>{u.lessons_completed}</td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right' }}>{u.quizzes_completed}</td>
+                  <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 700, color: '#0047AB', fontSize: 14 }}>{u.total_xp?.toLocaleString()}</td>
+                  <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 600 }}>{u.level}</td>
+                  <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 600, color: '#D97706' }}>{u.coins?.toLocaleString()}</td>
+                  <td style={{ padding: '14px 12px', textAlign: 'right' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: u.current_streak > 0 ? '#EF4444' : '#9CA3AF', fontWeight: 600 }}>
+                      {u.current_streak > 0 && '🔥'} {u.current_streak}
+                    </span>
+                  </td>
+                  <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 500 }}>{u.lessons_completed}</td>
+                  <td style={{ padding: '14px 12px', textAlign: 'right', fontWeight: 500 }}>{u.quizzes_completed}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Nenhum usuario encontrado</div>
+          <div style={{ padding: 48, textAlign: 'center', color: '#9CA3AF' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+            Nenhum usuario encontrado
+          </div>
         )}
       </div>
     </div>
