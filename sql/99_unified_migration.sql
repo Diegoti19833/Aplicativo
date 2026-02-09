@@ -499,13 +499,21 @@ DO $$ BEGIN
     ALTER TABLE store_items RENAME COLUMN price_xp TO price;
   END IF;
 END $$;
--- Se usar title sem name
+-- Garantir que name e title existem
 DO $$ BEGIN
   ALTER TABLE store_items ADD COLUMN IF NOT EXISTS name VARCHAR(255);
 EXCEPTION WHEN others THEN NULL;
 END $$;
--- Copiar title para name onde name está null
-UPDATE store_items SET name = title WHERE name IS NULL AND title IS NOT NULL;
+DO $$ BEGIN
+  ALTER TABLE store_items ADD COLUMN IF NOT EXISTS title VARCHAR(255);
+EXCEPTION WHEN others THEN NULL;
+END $$;
+-- Copiar title para name onde name está null (e vice-versa)
+DO $$ BEGIN
+  UPDATE store_items SET name = title WHERE name IS NULL AND title IS NOT NULL;
+  UPDATE store_items SET title = name WHERE title IS NULL AND name IS NOT NULL;
+EXCEPTION WHEN others THEN NULL;
+END $$;
 DO $$ BEGIN
   ALTER TABLE store_items ADD COLUMN IF NOT EXISTS price INTEGER NOT NULL DEFAULT 10;
 EXCEPTION WHEN others THEN NULL;
