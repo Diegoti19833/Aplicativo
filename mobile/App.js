@@ -1267,60 +1267,152 @@ function LessonDetailsScreen({ lesson, navigate }) {
   // ─── TELA DE VÍDEO OBRIGATÓRIO ───────────────────────────────────────────────
   if (showVideo) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#0F172A' }}>
-        {/* Header */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' }}>
-          <Pressable onPress={() => navigate('trail-details', trailData)} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="x" size={18} color="#FFF" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#0B1120' }}>
+        {/* ── HEADER PREMIUM ── */}
+        <LinearGradient
+          colors={['#0F1B2D', '#0B1120']}
+          style={{
+            flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: 18,
+            borderBottomWidth: 1, borderBottomColor: 'rgba(18,145,81,0.12)',
+          }}
+        >
+          <Pressable
+            onPress={() => navigate('trail-details', trailData)}
+            style={({ pressed }) => ({
+              width: 38, height: 38, borderRadius: 19,
+              backgroundColor: 'rgba(255,255,255,0.08)',
+              borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+              alignItems: 'center', justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Icon name="arrow-left" size={18} color="#94A3B8" />
           </Pressable>
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 15 }} numberOfLines={1}>{lessonData?.title}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-              <View style={{ backgroundColor: '#EF4444', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 }}>
-                <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '800' }}>VÍDEO OBRIGATÓRIO</Text>
-              </View>
+          <View style={{ flex: 1, marginLeft: 14 }}>
+            <Text style={{ color: '#F1F5F9', fontWeight: '800', fontSize: 16, letterSpacing: -0.3 }} numberOfLines={1}>
+              {lessonData?.title}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 }}>
+              <LinearGradient
+                colors={['#129151', '#0FA968']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}
+              >
+                <Icon name="film" size={10} color="#FFF" />
+                <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 }}>VÍDEO OBRIGATÓRIO</Text>
+              </LinearGradient>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          {/* Descrição */}
-          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 22, marginBottom: 20 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
+          {/* ── Descrição ── */}
+          <Text style={{ color: '#94A3B8', fontSize: 14, lineHeight: 23, marginBottom: 22, fontWeight: '500' }}>
             {lessonData?.description}
           </Text>
 
-          {/* Player de vídeo */}
+          {/* ── Player de vídeo ── */}
           <VideoPlayer
             videoUrl={lessonData?.video_url}
             lesson={lessonData}
             onVideoComplete={() => setVideoWatched(true)}
           />
 
-          {/* Info */}
-          <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 16, marginTop: 16, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Icon name="info" size={16} color="#F59E0B" />
-              <Text style={{ color: '#F59E0B', fontWeight: '700', fontSize: 13 }}>Como funciona</Text>
+          {/* ── Stats chips ── */}
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+            <View style={{
+              flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+              backgroundColor: 'rgba(18,145,81,0.1)', borderRadius: 14, paddingVertical: 12,
+              borderWidth: 1, borderColor: 'rgba(18,145,81,0.15)',
+            }}>
+              <Icon name="star" size={16} color="#34D399" />
+              <Text style={{ color: '#34D399', fontSize: 13, fontWeight: '700' }}>
+                {lessonData?.xp_reward || 20} XP
+              </Text>
             </View>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, lineHeight: 20 }}>
-              Assista ao vídeo completo antes de responder às perguntas. Após assistir, clique no botão abaixo para iniciar o quiz.
-            </Text>
+            <View style={{
+              flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+              backgroundColor: 'rgba(99,102,241,0.1)', borderRadius: 14, paddingVertical: 12,
+              borderWidth: 1, borderColor: 'rgba(99,102,241,0.15)',
+            }}>
+              <Icon name="help-circle" size={16} color="#818CF8" />
+              <Text style={{ color: '#818CF8', fontSize: 13, fontWeight: '700' }}>
+                {quizzes?.length || 0} perguntas
+              </Text>
+            </View>
           </View>
 
-          {/* Botão de liberar quiz */}
+          {/* ── Card Como Funciona ── */}
+          <View style={{
+            backgroundColor: 'rgba(18,145,81,0.06)', borderRadius: 18, padding: 18,
+            borderWidth: 1, borderColor: 'rgba(18,145,81,0.15)',
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <View style={{
+                width: 28, height: 28, borderRadius: 14,
+                backgroundColor: 'rgba(18,145,81,0.15)',
+                alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icon name="info" size={14} color="#34D399" />
+              </View>
+              <Text style={{ color: '#34D399', fontWeight: '800', fontSize: 14 }}>Como funciona</Text>
+            </View>
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingLeft: 4 }}>
+                <Text style={{ color: '#34D399', fontSize: 13, fontWeight: '800' }}>1.</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 13, lineHeight: 20, flex: 1 }}>
+                  Assista ao vídeo completo da aula
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingLeft: 4 }}>
+                <Text style={{ color: '#34D399', fontSize: 13, fontWeight: '800' }}>2.</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 13, lineHeight: 20, flex: 1 }}>
+                  Clique no botão abaixo para iniciar o quiz
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingLeft: 4 }}>
+                <Text style={{ color: '#34D399', fontSize: 13, fontWeight: '800' }}>3.</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 13, lineHeight: 20, flex: 1 }}>
+                  Acerte as perguntas e ganhe XP!
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* ── Separador ── */}
+          <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 24 }} />
+
+          {/* ── Botão CTA Premium ── */}
           <Pressable
             onPress={() => setVideoWatched(true)}
             style={({ pressed }) => ({
-              marginTop: 24, borderRadius: 18, paddingVertical: 18,
-              backgroundColor: '#129151',
-              flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-              opacity: pressed ? 0.85 : 1,
-              shadowColor: '#129151', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.5, shadowRadius: 12, elevation: 8,
+              borderRadius: 20, overflow: 'hidden',
+              shadowColor: '#129151', shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.5, shadowRadius: 16, elevation: 10,
+              opacity: pressed ? 0.9 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
             })}
           >
-            <Icon name="check-circle" size={20} color="#FFF" />
-            <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>Já assisti ao vídeo → Ir ao Quiz</Text>
+            <LinearGradient
+              colors={['#129151', '#0FA968', '#16A34A']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={{
+                paddingVertical: 18, borderRadius: 20,
+                flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+              }}
+            >
+              <Icon name="zap" size={20} color="#FFF" />
+              <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800', letterSpacing: -0.2 }}>
+                Ir para o Quiz
+              </Text>
+              <Icon name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
+            </LinearGradient>
           </Pressable>
+
+          {/* Subtle hint */}
+          <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, textAlign: 'center', marginTop: 12, fontWeight: '500' }}>
+            Assista o vídeo antes para melhor desempenho no quiz
+          </Text>
         </ScrollView>
       </SafeAreaView>
     );
