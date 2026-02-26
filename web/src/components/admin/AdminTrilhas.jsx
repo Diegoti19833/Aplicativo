@@ -173,6 +173,9 @@ export default function AdminTrilhas() {
   const [showEditTrailModal, setShowEditTrailModal] = useState(false);
   const [showNewLessonModal, setShowNewLessonModal] = useState(false);
   const [showEditLessonModal, setShowEditLessonModal] = useState(false);
+  const [previewTrail, setPreviewTrail] = useState(null);
+  const [previewLessons, setPreviewLessons] = useState([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Selection state
   const [selectedTrail, setSelectedTrail] = useState(null);
@@ -180,6 +183,7 @@ export default function AdminTrilhas() {
   const [expandedTrailId, setExpandedTrailId] = useState(null);
   const [loadingLessons, setLoadingLessons] = useState(false);
   const [search, setSearch] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   // Form states
   const ROLE_OPTIONS = [
@@ -189,6 +193,7 @@ export default function AdminTrilhas() {
   ];
 
   const [filterRole, setFilterRole] = useState('todos');
+  const [filterLevel, setFilterLevel] = useState('todos');
   const [newTrailData, setNewTrailData] = useState({ title: '', level: 'Básico', estimatedMinutes: 60, description: '', targetRoles: ['funcionario', 'gerente', 'caixa'] });
   const [editingTrailData, setEditingTrailData] = useState(null);
   const [newLessonData, setNewLessonData] = useState({ title: '', type: 'video', content: '', durationMinutes: 15, quizData: null });
@@ -438,9 +443,19 @@ export default function AdminTrilhas() {
     setShowEditLessonModal(true);
   };
 
-  const handlePreview = (e) => {
+  const handlePreview = async (e, trail) => {
     e.stopPropagation();
-    alert('Funcionalidade de Preview em desenvolvimento. Em breve você poderá visualizar como o aluno vê a trilha.');
+    setPreviewTrail(trail);
+    setLoadingPreview(true);
+    try {
+      const lessons = await AdminDb.lessons.listByTrail({ trailId: trail.id });
+      setPreviewLessons(lessons || []);
+    } catch (err) {
+      console.error(err);
+      setPreviewLessons([]);
+    } finally {
+      setLoadingPreview(false);
+    }
   };
 
   const totalTrails = trails.length;
@@ -485,11 +500,15 @@ export default function AdminTrilhas() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
-            <select className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-              <option>Todos os Níveis</option>
-              <option>Básico</option>
-              <option>Intermediário</option>
-              <option>Avançado</option>
+            <select
+              value={filterLevel}
+              onChange={(e) => setFilterLevel(e.target.value)}
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#129151] bg-white"
+            >
+              <option value="todos">Todos os Níveis</option>
+              <option value="1">Básico</option>
+              <option value="3">Intermediário</option>
+              <option value="5">Avançado</option>
             </select>
             <select
               value={filterRole}
@@ -516,6 +535,7 @@ export default function AdminTrilhas() {
             {trails.filter(t => {
               if (search.trim() && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
               if (filterRole !== 'todos' && Array.isArray(t.target_roles) && !t.target_roles.includes(filterRole)) return false;
+              if (filterLevel !== 'todos' && t.difficulty_level !== Number(filterLevel)) return false;
               return true;
             }).map((trail) => (
               <div
@@ -538,18 +558,26 @@ export default function AdminTrilhas() {
                       >
                         {trail.is_active ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
                       </button>
-                      <div className="relative group/menu">
-                        <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                      <div className="relative">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === trail.id ? null : trail.id); }}
+                          className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                        >
                           <MoreVertical size={20} />
                         </button>
-                        <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 hidden group-hover/menu:block z-10">
-                          <button onClick={(e) => openEditTrailModal(e, trail)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                            <Pencil size={14} /> Editar Detalhes
-                          </button>
-                          <button onClick={() => handleDeleteTrail(trail.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                            <Trash size={14} /> Excluir Trilha
-                          </button>
-                        </div>
+                        {openMenuId === trail.id && (
+                          <>
+                            <div className="fixed inset-0 z-[5]" onClick={() => setOpenMenuId(null)}></div>
+                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-10">
+                              <button onClick={(e) => { setOpenMenuId(null); openEditTrailModal(e, trail); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                <Pencil size={14} /> Editar Detalhes
+                              </button>
+                              <button onClick={() => { setOpenMenuId(null); handleDeleteTrail(trail.id); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                <Trash size={14} /> Excluir Trilha
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -597,8 +625,8 @@ export default function AdminTrilhas() {
                       </div>
                     </div>
                     <button
-                      onClick={(e) => handlePreview(e)}
-                      className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      onClick={(e) => handlePreview(e, trail)}
+                      className="text-xs font-medium text-[#129151] hover:text-[#0B6E3D] flex items-center gap-1"
                     >
                       <Eye size={14} /> Preview
                     </button>
@@ -667,12 +695,12 @@ export default function AdminTrilhas() {
       {
         showNewTrailModal && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[85vh] flex flex-col">
+              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
                 <h3 className="font-bold text-gray-800">Nova Trilha</h3>
                 <button onClick={() => setShowNewTrailModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 overflow-y-auto">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Título da Trilha</label>
                   <input
@@ -749,7 +777,7 @@ export default function AdminTrilhas() {
                 <button
                   onClick={handleCreateTrail}
                   disabled={savingTrail}
-                  className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
+                  className="w-full mt-4 bg-[#129151] hover:bg-[#0B6E3D] text-white font-semibold py-2.5 rounded-lg transition-colors"
                 >
                   {savingTrail ? 'Criando...' : 'Criar Trilha'}
                 </button>
@@ -763,12 +791,12 @@ export default function AdminTrilhas() {
       {
         showEditTrailModal && editingTrailData && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[85vh] flex flex-col">
+              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
                 <h3 className="font-bold text-gray-800">Editar Trilha</h3>
                 <button onClick={() => setShowEditTrailModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 overflow-y-auto">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
                   <input
@@ -841,7 +869,7 @@ export default function AdminTrilhas() {
                 <button
                   onClick={handleUpdateTrail}
                   disabled={savingTrail}
-                  className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
+                  className="w-full mt-4 bg-[#129151] hover:bg-[#0B6E3D] text-white font-semibold py-2.5 rounded-lg transition-colors"
                 >
                   {savingTrail ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
@@ -989,6 +1017,133 @@ export default function AdminTrilhas() {
           </div>
         )
       }
+
+      {/* ═══════════ PREVIEW MODAL ═══════════ */}
+      {previewTrail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setPreviewTrail(null)}>
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            {/* Phone Frame */}
+            <div className="w-[375px] h-[700px] bg-white rounded-[40px] shadow-2xl border-[8px] border-gray-800 overflow-hidden flex flex-col">
+              {/* Phone Notch */}
+              <div className="bg-gray-800 flex items-center justify-center pt-2 pb-1">
+                <div className="w-24 h-5 bg-gray-900 rounded-full"></div>
+              </div>
+
+              {/* Header */}
+              <div className="bg-gradient-to-r from-[#129151] to-[#064E29] px-5 py-4 flex items-center gap-3">
+                <button onClick={() => setPreviewTrail(null)} className="text-white/80 hover:text-white">
+                  <ChevronDown size={22} className="rotate-90" />
+                </button>
+                <div className="flex-1">
+                  <p className="text-white font-bold text-sm truncate">{previewTrail.title}</p>
+                  <p className="text-white/60 text-xs">{previewTrail.total_lessons || previewLessons.length} aulas • {formatMinutes(previewTrail.estimated_duration)}</p>
+                </div>
+                <div className="bg-white/20 rounded-full px-2 py-0.5">
+                  <span className="text-white text-xs font-bold">{previewTrail.difficulty_level === 1 ? 'Básico' : previewTrail.difficulty_level === 3 ? 'Interm.' : 'Avançado'}</span>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto bg-[#F8FAF9]">
+                {/* Trail Banner */}
+                <div className="bg-gradient-to-br from-[#ECFDF5] to-[#D1FAE5] p-5">
+                  <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-3">
+                    <Book size={24} className="text-[#129151]" />
+                  </div>
+                  <h2 className="text-lg font-extrabold text-gray-900 mb-1">{previewTrail.title}</h2>
+                  <p className="text-sm text-gray-600 leading-relaxed">{previewTrail.description || 'Sem descrição.'}</p>
+
+                  {/* Roles */}
+                  {Array.isArray(previewTrail.target_roles) && previewTrail.target_roles.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {previewTrail.target_roles.map(r => (
+                        <span key={r} className="text-xs px-2 py-0.5 rounded-full bg-white/80 text-[#065F46] font-semibold capitalize">{r}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Progress Bar Mock */}
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>Progresso</span>
+                      <span>0%</span>
+                    </div>
+                    <div className="h-2 bg-white rounded-full overflow-hidden">
+                      <div className="h-full bg-[#129151] rounded-full" style={{ width: '0%' }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lessons List */}
+                <div className="p-5">
+                  <h3 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">Aulas da Trilha</h3>
+
+                  {loadingPreview ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse"></div>
+                      ))}
+                    </div>
+                  ) : previewLessons.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <PlayCircle size={20} className="text-gray-400" />
+                      </div>
+                      <p className="text-sm text-gray-400">Nenhuma aula cadastrada ainda</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {previewLessons.map((lesson, idx) => (
+                        <div key={lesson.id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${idx === 0 ? 'bg-[#ECFDF5] text-[#129151]' : 'bg-gray-100 text-gray-400'
+                            }`}>
+                            {lesson.type === 'video' ? <Video size={18} /> : lesson.type === 'quiz' ? <HelpCircle size={18} /> : <FileText size={18} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-semibold truncate ${idx === 0 ? 'text-gray-900' : 'text-gray-500'}`}>{lesson.title}</p>
+                            <p className="text-xs text-gray-400 capitalize">{lesson.type === 'video' ? '🎬 Vídeo' : lesson.type === 'quiz' ? '📝 Quiz' : '📄 Texto'} • {lesson.duration || 10}min</p>
+                          </div>
+                          {idx === 0 ? (
+                            <div className="w-8 h-8 bg-[#129151] rounded-full flex items-center justify-center">
+                              <PlayCircle size={16} className="text-white" />
+                            </div>
+                          ) : (
+                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs text-gray-400">🔒</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Bar */}
+              <div className="bg-white border-t border-gray-100 px-5 py-3 flex items-center justify-center gap-2">
+                <button className="flex-1 py-2.5 bg-[#129151] text-white rounded-xl text-sm font-bold shadow-md">
+                  ▶ Iniciar Trilha
+                </button>
+              </div>
+
+              {/* Home Indicator */}
+              <div className="bg-white flex items-center justify-center pb-2">
+                <div className="w-32 h-1 bg-gray-300 rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setPreviewTrail(null)}
+              className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors border border-gray-200"
+            >
+              <X size={16} />
+            </button>
+
+            <p className="text-center text-white/70 text-xs mt-4">👆 Preview — Visão do Aluno no App Mobile</p>
+          </div>
+        </div>
+      )}
     </div >
   );
 }

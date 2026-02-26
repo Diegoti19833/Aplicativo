@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Plus, Search, MoreVertical, Shield, ShieldCheck, Mail, X, Pencil, Trash,
   Download, Filter, ChevronLeft, ChevronRight, User as UserIcon, Calendar, Activity,
-  Clock, CheckCircle, XCircle, Coins
+  Clock, CheckCircle, XCircle, Coins, Building2
 } from 'lucide-react';
 import { AdminDb } from '../../services/adminDb';
 import { useToast } from './ToastContext';
@@ -48,14 +48,16 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserStats, setSelectedUserStats] = useState(null);
   const [loadingUserStats, setLoadingUserStats] = useState(false);
-  const [newUserData, setNewUserData] = useState({ name: '', email: '', role: 'Funcionário' });
+  const [newUserData, setNewUserData] = useState({ name: '', email: '', role: 'Funcionário', franchise_id: '' });
   const [editingUser, setEditingUser] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [stats, setStats] = useState(null); // Global user stats
+  const [stats, setStats] = useState(null);
+  const [franchisesList, setFranchisesList] = useState([]);
 
   useEffect(() => {
     // Fetch high-level stats (reuse dashboard report)
     AdminDb.reports.getAdminDashboard().then(data => setStats(data)).catch(console.error);
+    AdminDb.franchises.list().then(data => setFranchisesList(data)).catch(console.error);
   }, []);
 
   // Debounce search
@@ -121,7 +123,7 @@ export default function AdminUsers() {
     try {
       setSaving(true);
       await AdminDb.users.create(newUserData);
-      setNewUserData({ name: '', email: '', role: 'Funcionário' });
+      setNewUserData({ name: '', email: '', role: 'Funcionário', franchise_id: '' });
       setShowNewUserModal(false);
       loadUsers();
     } catch (e) {
@@ -139,7 +141,8 @@ export default function AdminUsers() {
         id: editingUser.id,
         name: editingUser.name,
         email: editingUser.email,
-        role: editingUser.role
+        role: editingUser.role,
+        franchise_id: editingUser.franchise_id
       });
       setEditingUser(null);
       setShowEditUserModal(false);
@@ -279,7 +282,7 @@ export default function AdminUsers() {
           </button>
           <button
             onClick={() => setShowNewUserModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[#129151] text-white rounded-lg hover:bg-[#0B6E3D] transition-colors font-medium shadow-sm"
           >
             <Plus size={20} />
             Novo Usuário
@@ -328,6 +331,7 @@ export default function AdminUsers() {
               <tr>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuário</th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Função</th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Franquia</th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Desempenho</th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">POPCOINS</th>
@@ -342,6 +346,7 @@ export default function AdminUsers() {
                   <tr key={i} className="animate-pulse">
                     <td className="px-6 py-4"><div className="h-10 w-48 bg-gray-200 rounded-lg"></div></td>
                     <td className="px-6 py-4"><div className="h-6 w-24 bg-gray-200 rounded-full"></div></td>
+                    <td className="px-6 py-4"><div className="h-6 w-24 bg-gray-200 rounded-full"></div></td>
                     <td className="px-6 py-4"><div className="h-6 w-16 bg-gray-200 rounded-full"></div></td>
                     <td className="px-6 py-4"><div className="h-4 w-32 bg-gray-200 rounded"></div></td>
                     <td className="px-6 py-4"><div className="h-4 w-20 bg-gray-200 rounded"></div></td>
@@ -351,7 +356,7 @@ export default function AdminUsers() {
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                     Nenhum usuário encontrado.
                   </td>
                 </tr>
@@ -384,6 +389,16 @@ export default function AdminUsers() {
                           {user.role}
                         </span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.franchise ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          <Building2 size={12} />
+                          {user.franchise.name}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border
@@ -531,10 +546,23 @@ export default function AdminUsers() {
                   <option>Admin</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Franquia (Unidade)</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#129151]"
+                  value={newUserData.franchise_id}
+                  onChange={e => setNewUserData({ ...newUserData, franchise_id: e.target.value })}
+                >
+                  <option value="">Sem franquia</option>
+                  {franchisesList.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
+              </div>
               <button
                 onClick={handleCreateUser}
                 disabled={saving}
-                className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2"
+                className="w-full mt-4 bg-[#129151] hover:bg-[#0B6E3D] text-white font-semibold py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2"
               >
                 {saving ? 'Salvando...' : 'Criar Usuário'}
               </button>
@@ -582,10 +610,23 @@ export default function AdminUsers() {
                   <option>Admin</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Franquia (Unidade)</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#129151]"
+                  value={editingUser.franchise_id || ''}
+                  onChange={e => setEditingUser({ ...editingUser, franchise_id: e.target.value })}
+                >
+                  <option value="">Sem franquia</option>
+                  {franchisesList.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
+              </div>
               <button
                 onClick={handleUpdateUser}
                 disabled={saving}
-                className="w-full mt-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
+                className="w-full mt-4 bg-[#129151] hover:bg-[#0B6E3D] text-white font-semibold py-2.5 rounded-lg transition-colors"
               >
                 {saving ? 'Salvando...' : 'Salvar Alterações'}
               </button>
@@ -628,6 +669,12 @@ export default function AdminUsers() {
                     <span className={`px-2 py-1 rounded text-xs font-medium border ${selectedUser.is_active ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
                       {selectedUser.is_active ? 'Ativo' : 'Inativo'}
                     </span>
+                    {selectedUser.franchise && (
+                      <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-medium border border-indigo-100 flex items-center gap-1">
+                        <Building2 size={12} />
+                        {selectedUser.franchise.name}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -752,7 +799,7 @@ export default function AdminUsers() {
                   setShowDetailsModal(false);
                   openEditModal(selectedUser);
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition-colors"
+                className="px-4 py-2 bg-[#129151] text-white rounded-lg hover:bg-[#0B6E3D] font-medium shadow-sm transition-colors"
               >
                 Editar Perfil
               </button>

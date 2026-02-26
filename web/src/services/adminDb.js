@@ -221,7 +221,7 @@ export const AdminDb = {
 
       let query = supabase
         .from('users')
-        .select('id,email,name,role,total_xp,current_streak,is_active,created_at,last_activity_date,avatar_url', { count: isPagination ? 'exact' : null })
+        .select('id,email,name,role,total_xp,current_streak,is_active,created_at,last_activity_date,avatar_url,franchise_id,franchise:franchises(id,name)', { count: isPagination ? 'exact' : null })
         .order('total_xp', { ascending: false })
         .order('created_at', { ascending: false })
 
@@ -244,7 +244,7 @@ export const AdminDb = {
       }
       return data || []
     },
-    create: async ({ name, email, role }) => {
+    create: async ({ name, email, role, franchise_id }) => {
       const supabase = requireSupabase()
       const payload = {
         name,
@@ -252,16 +252,18 @@ export const AdminDb = {
         role: normalizeRole(role) || 'funcionario',
         is_active: true,
       }
+      if (franchise_id) payload.franchise_id = franchise_id
       const { data, error } = await supabase.from('users').insert(payload).select().single()
       if (error) throw error
       return data
     },
-    update: async ({ id, name, email, role }) => {
+    update: async ({ id, name, email, role, franchise_id }) => {
       const supabase = requireSupabase()
       const payload = {}
       if (name !== undefined) payload.name = name
       if (email !== undefined) payload.email = email
       if (role !== undefined) payload.role = normalizeRole(role)
+      if (franchise_id !== undefined) payload.franchise_id = franchise_id || null
 
       const { data, error } = await supabase.from('users').update(payload).eq('id', id).select().single()
       if (error) throw error
@@ -913,5 +915,34 @@ export const AdminDb = {
 
       return { success: true }
     }
+  },
+
+  franchises: {
+    list: async () => {
+      const supabase = requireSupabase()
+      const { data, error } = await supabase
+        .from('franchises')
+        .select('*')
+        .order('name')
+      if (error) throw error
+      return data || []
+    },
+    create: async (payload) => {
+      const supabase = requireSupabase()
+      const { data, error } = await supabase.from('franchises').insert(payload).select().single()
+      if (error) throw error
+      return data
+    },
+    update: async ({ id, ...updates }) => {
+      const supabase = requireSupabase()
+      const { data, error } = await supabase.from('franchises').update(updates).eq('id', id).select().single()
+      if (error) throw error
+      return data
+    },
+    delete: async (id) => {
+      const supabase = requireSupabase()
+      const { error } = await supabase.from('franchises').delete().eq('id', id)
+      if (error) throw error
+    },
   }
 }

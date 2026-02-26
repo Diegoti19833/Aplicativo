@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -9,8 +10,7 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
   const [scaleAnim] = useState(new Animated.Value(1));
 
   const handleAnswerSelect = (optionIndex) => {
-    if (showFeedback) return; // Não permitir mudança após feedback
-    
+    if (showFeedback) return;
     setSelectedAnswer(optionIndex);
   };
 
@@ -20,26 +20,23 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
       return;
     }
 
-    // Verificar se a resposta está correta
     const correct = selectedAnswer === quiz.correct_answer;
     setIsCorrect(correct);
     setShowFeedback(true);
 
-    // Animação de feedback
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: 1.1,
-        duration: 200,
+        toValue: 1.05,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Chamar callback com resultado
     onAnswerSubmit({
       quizId: quiz.id,
       selectedAnswer: selectedAnswer,
@@ -49,13 +46,11 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
   };
 
   const handleNext = () => {
-    // Animação de saída
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      // Reset para próxima pergunta
       setSelectedAnswer(null);
       setShowFeedback(false);
       setIsCorrect(false);
@@ -66,29 +61,57 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
 
   const getOptionStyle = (optionIndex) => {
     const baseStyle = [styles.option];
-    
+
     if (showFeedback) {
       if (optionIndex === quiz.correct_answer) {
-        // Resposta correta sempre verde
         baseStyle.push(styles.optionCorrect);
       } else if (optionIndex === selectedAnswer && !isCorrect) {
-        // Resposta selecionada incorreta em vermelho
         baseStyle.push(styles.optionIncorrect);
       } else {
-        // Outras opções ficam desabilitadas
         baseStyle.push(styles.optionDisabled);
       }
     } else if (selectedAnswer === optionIndex) {
-      // Opção selecionada (antes do feedback)
       baseStyle.push(styles.optionSelected);
     }
-    
+
+    return baseStyle;
+  };
+
+  const getIndicatorStyle = (optionIndex) => {
+    const baseStyle = [styles.optionIndicator];
+
+    if (showFeedback) {
+      if (optionIndex === quiz.correct_answer) {
+        baseStyle.push({ backgroundColor: '#129151', borderColor: '#129151' });
+      } else if (optionIndex === selectedAnswer && !isCorrect) {
+        baseStyle.push({ backgroundColor: '#EF4444', borderColor: '#EF4444' });
+      }
+    } else if (selectedAnswer === optionIndex) {
+      baseStyle.push({ backgroundColor: '#129151', borderColor: '#129151' });
+    }
+
+    return baseStyle;
+  };
+
+  const getLetterStyle = (optionIndex) => {
+    const baseStyle = [styles.optionLetter];
+
+    if (showFeedback) {
+      if (optionIndex === quiz.correct_answer) {
+        baseStyle.push({ color: '#FFFFFF' });
+      } else if (optionIndex === selectedAnswer && !isCorrect) {
+        baseStyle.push({ color: '#FFFFFF' });
+      }
+    } else if (selectedAnswer === optionIndex) {
+      baseStyle.push({ color: '#FFFFFF' });
+    }
+
     return baseStyle;
   };
 
   const getOptionTextStyle = (optionIndex) => {
     const baseStyle = [styles.optionText];
-    
+
     if (showFeedback) {
       if (optionIndex === quiz.correct_answer) {
         baseStyle.push(styles.optionTextCorrect);
@@ -100,24 +123,16 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
     } else if (selectedAnswer === optionIndex) {
       baseStyle.push(styles.optionTextSelected);
     }
-    
+
     return baseStyle;
   };
 
   const parseOptions = (options) => {
-    if (Array.isArray(options)) {
-      return options;
-    }
-    
+    if (Array.isArray(options)) return options;
     if (typeof options === 'string') {
-      try {
-        return JSON.parse(options);
-      } catch (error) {
-        console.error('❌ [parseOptions] Erro ao parsear string JSON:', error);
-        return [];
-      }
+      try { return JSON.parse(options); }
+      catch (error) { return []; }
     }
-    
     return [];
   };
 
@@ -125,24 +140,32 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-      <View style={styles.questionContainer}>
-        <Text style={styles.questionNumber}>
-          Pergunta {quiz.order_index || 1}
-        </Text>
+
+      {/* Question Card */}
+      <View style={styles.questionCard}>
+        <View style={styles.questionBadge}>
+          <Text style={styles.questionBadgeText}>
+            📝 Pergunta {quiz.order_index || 1}
+          </Text>
+        </View>
         <Text style={styles.question}>{quiz.question}</Text>
       </View>
 
+      {/* Options */}
       <View style={styles.optionsContainer}>
         {options.map((option, index) => (
           <Pressable
             key={index}
-            style={getOptionStyle(index)}
+            style={({ pressed }) => [
+              ...getOptionStyle(index),
+              pressed && !showFeedback && { transform: [{ scale: 0.98 }] }
+            ]}
             onPress={() => handleAnswerSelect(index)}
             disabled={showFeedback}
           >
             <View style={styles.optionContent}>
-              <View style={styles.optionIndicator}>
-                <Text style={styles.optionLetter}>
+              <View style={getIndicatorStyle(index)}>
+                <Text style={getLetterStyle(index)}>
                   {String.fromCharCode(65 + index)}
                 </Text>
               </View>
@@ -150,53 +173,86 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
                 {option}
               </Text>
             </View>
-            
+
             {showFeedback && index === quiz.correct_answer && (
-              <Text style={styles.correctIcon}>✓</Text>
+              <View style={styles.feedbackIcon}>
+                <Text style={{ fontSize: 16, color: '#129151' }}>✓</Text>
+              </View>
             )}
             {showFeedback && index === selectedAnswer && !isCorrect && (
-              <Text style={styles.incorrectIcon}>✗</Text>
+              <View style={[styles.feedbackIcon, { backgroundColor: '#FEE2E2' }]}>
+                <Text style={{ fontSize: 16, color: '#EF4444' }}>✗</Text>
+              </View>
             )}
           </Pressable>
         ))}
       </View>
 
+      {/* Feedback Card */}
       {showFeedback && (
         <View style={[styles.feedbackContainer, isCorrect ? styles.feedbackCorrect : styles.feedbackIncorrect]}>
-          <Text style={styles.feedbackTitle}>
-            {isCorrect ? '🎉 Correto!' : '❌ Incorreto'}
-          </Text>
+          <View style={styles.feedbackHeader}>
+            <Text style={styles.feedbackEmoji}>
+              {isCorrect ? '🎉' : '💡'}
+            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.feedbackTitle, { color: isCorrect ? '#065F46' : '#991B1B' }]}>
+                {isCorrect ? 'Parabéns, acertou!' : 'Não foi dessa vez'}
+              </Text>
+              {isCorrect && (
+                <View style={styles.xpBadge}>
+                  <Text style={styles.xpReward}>
+                    +{quiz.xp_reward || 10} XP
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
           <Text style={styles.feedbackExplanation}>
             {quiz.explanation}
           </Text>
-          {isCorrect && (
-            <Text style={styles.xpReward}>
-              +{quiz.xp_reward || 10} Pontos
-            </Text>
-          )}
         </View>
       )}
 
+      {/* Action Button */}
       <View style={styles.buttonContainer}>
         {!showFeedback ? (
           <Pressable
-            style={[
+            style={({ pressed }) => [
               styles.submitButton,
-              selectedAnswer === null && styles.submitButtonDisabled
+              selectedAnswer === null && styles.submitButtonDisabled,
+              pressed && selectedAnswer !== null && { opacity: 0.9 }
             ]}
             onPress={handleSubmitAnswer}
             disabled={selectedAnswer === null}
           >
-            <Text style={styles.submitButtonText}>Confirmar Resposta</Text>
+            <LinearGradient
+              colors={selectedAnswer !== null ? ['#129151', '#0B6E3D'] : ['#D1D5DB', '#9CA3AF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.submitGradient}
+            >
+              <Text style={styles.submitButtonText}>Confirmar Resposta</Text>
+            </LinearGradient>
           </Pressable>
         ) : (
           <Pressable
-            style={styles.nextButton}
+            style={({ pressed }) => [
+              styles.nextButton,
+              pressed && { opacity: 0.9 }
+            ]}
             onPress={handleNext}
           >
-            <Text style={styles.nextButtonText}>
-              {isLastQuiz ? 'Finalizar Aula' : 'Próxima Pergunta'}
-            </Text>
+            <LinearGradient
+              colors={['#129151', '#064E29']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.submitGradient}
+            >
+              <Text style={styles.nextButtonText}>
+                {isLastQuiz ? '🏁 Finalizar Aula' : 'Próxima Pergunta →'}
+              </Text>
+            </LinearGradient>
           </Pressable>
         )}
       </View>
@@ -208,51 +264,87 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#F8FAF9',
   },
-  questionContainer: {
-    marginBottom: 30,
+
+  // Question Card
+  questionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#129151',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  questionNumber: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 10,
-    fontWeight: '600',
+  questionBadge: {
+    backgroundColor: '#ECFDF5',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 16,
+  },
+  questionBadgeText: {
+    fontSize: 13,
+    color: '#065F46',
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   question: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '800',
+    color: '#1F2937',
     lineHeight: 28,
   },
+
+  // Options
   optionsContainer: {
-    marginBottom: 30,
+    marginBottom: 20,
+    gap: 12,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   optionSelected: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#2196f3',
+    backgroundColor: '#ECFDF5',
+    borderColor: '#129151',
+    shadowColor: '#129151',
+    shadowOpacity: 0.12,
+    elevation: 4,
   },
   optionCorrect: {
-    backgroundColor: '#e8f5e8',
-    borderColor: '#4caf50',
+    backgroundColor: '#DCFCE7',
+    borderColor: '#129151',
+    shadowColor: '#129151',
+    shadowOpacity: 0.15,
+    elevation: 4,
   },
   optionIncorrect: {
-    backgroundColor: '#ffebee',
-    borderColor: '#f44336',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
+    shadowColor: '#EF4444',
+    shadowOpacity: 0.15,
+    elevation: 4,
   },
   optionDisabled: {
-    backgroundColor: '#f5f5f5',
-    opacity: 0.6,
+    backgroundColor: '#F9FAFB',
+    borderColor: '#E5E7EB',
+    opacity: 0.5,
   },
   optionContent: {
     flexDirection: 'row',
@@ -260,109 +352,145 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionIndicator: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  optionLetter: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#6B7280',
+  },
+  optionText: {
+    fontSize: 15,
+    color: '#374151',
+    flex: 1,
+    lineHeight: 22,
+    fontWeight: '500',
+  },
+  optionTextSelected: {
+    color: '#065F46',
+    fontWeight: '700',
+  },
+  optionTextCorrect: {
+    color: '#065F46',
+    fontWeight: '700',
+  },
+  optionTextIncorrect: {
+    color: '#991B1B',
+    fontWeight: '700',
+  },
+  optionTextDisabled: {
+    color: '#9CA3AF',
+  },
+
+  // Feedback icons
+  feedbackIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#ddd',
-    justifyContent: 'center',
+    backgroundColor: '#DCFCE7',
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
   },
-  optionLetter: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#666',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-    lineHeight: 22,
-  },
-  optionTextSelected: {
-    color: '#2196f3',
-    fontWeight: '600',
-  },
-  optionTextCorrect: {
-    color: '#4caf50',
-    fontWeight: '600',
-  },
-  optionTextIncorrect: {
-    color: '#f44336',
-    fontWeight: '600',
-  },
-  optionTextDisabled: {
-    color: '#999',
-  },
-  correctIcon: {
-    fontSize: 20,
-    color: '#4caf50',
-    fontWeight: 'bold',
-  },
-  incorrectIcon: {
-    fontSize: 20,
-    color: '#f44336',
-    fontWeight: 'bold',
-  },
+
+  // Feedback Card
   feedbackContainer: {
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 20,
     marginBottom: 20,
   },
   feedbackCorrect: {
-    backgroundColor: '#e8f5e8',
-    borderLeftWidth: 4,
-    borderLeftColor: '#4caf50',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   feedbackIncorrect: {
-    backgroundColor: '#ffebee',
-    borderLeftWidth: 4,
-    borderLeftColor: '#f44336',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  feedbackEmoji: {
+    fontSize: 32,
   },
   feedbackTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
+    fontWeight: '800',
   },
   feedbackExplanation: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 8,
+    color: '#4B5563',
+    lineHeight: 22,
+  },
+  xpBadge: {
+    backgroundColor: '#FEF3C7',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginTop: 4,
   },
   xpReward: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#ff9800',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#D97706',
   },
+
+  // Buttons
   buttonContainer: {
     marginTop: 'auto',
+    paddingBottom: 8,
   },
   submitButton: {
-    backgroundColor: '#2196f3',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#129151',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   submitButtonDisabled: {
-    backgroundColor: '#ccc',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    borderRadius: 16,
   },
   submitButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   nextButton: {
-    backgroundColor: '#4caf50',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#129151',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
   nextButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });
 

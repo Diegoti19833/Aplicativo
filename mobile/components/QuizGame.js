@@ -47,18 +47,18 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
   // Função para carregar Pontos totais do usuário
   const loadUserTotalPoints = async () => {
     if (!user?.id) return;
-    
+
     try {
       const { data, error } = await supabase
         .rpc('get_user_dashboard', { user_id_param: user.id });
-      
+
       if (error) throw error;
-      
+
       // Aliasing xp_total to userTotalPoints
       if (data?.user?.xp_total !== undefined) {
         setUserTotalPoints(data.user.xp_total);
       } else if (data?.user?.total_points !== undefined) {
-         setUserTotalPoints(data.user.total_points);
+        setUserTotalPoints(data.user.total_points);
       }
     } catch (error) {
       console.error('Erro ao carregar Pontos totais do usuário:', error);
@@ -85,7 +85,7 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
     if (Array.isArray(options)) {
       return options;
     }
-    
+
     if (typeof options === 'string') {
       try {
         return JSON.parse(options);
@@ -94,15 +94,15 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
         return [];
       }
     }
-    
+
     return [];
   };
 
   const handleOptionSelect = (optionIndex) => {
     if (showResult || isSubmitting) return;
-    
+
     setSelectedOption(optionIndex);
-    
+
     // Animação de seleção
     Animated.sequence([
       Animated.timing(scaleAnim, {
@@ -131,23 +131,23 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
 
       // Registrar tentativa no banco - tentativa simples primeiro
       let attemptData, attemptError;
-      
+
       try {
-         // Tentar inserção com selected_answer (estrutura real do banco)
-         // Note: keeping xp_earned column name for now if backend expects it, but we can alias if needed
-         const result = await supabase
-           .from('quiz_attempts')
-           .insert({
-             user_id: user.id,
-             quiz_id: currentQuiz.id,
-             selected_answer: selectedOption, // Índice da opção selecionada (0-3)
-             is_correct: isCorrect,
-             xp_earned: points, // Still mapping to xp_earned in DB for now
-             attempt_number: 1
-           })
-           .select()
-           .single();
-        
+        // Tentar inserção com selected_answer (estrutura real do banco)
+        // Note: keeping xp_earned column name for now if backend expects it, but we can alias if needed
+        const result = await supabase
+          .from('quiz_attempts')
+          .insert({
+            user_id: user.id,
+            quiz_id: currentQuiz.id,
+            selected_answer: selectedOption, // Índice da opção selecionada (0-3)
+            is_correct: isCorrect,
+            xp_earned: points, // Still mapping to xp_earned in DB for now
+            attempt_number: 1
+          })
+          .select()
+          .single();
+
         attemptData = result.data;
         attemptError = result.error;
       } catch (error) {
@@ -159,28 +159,28 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
       // Atualizar estados locais
       setIsCorrect(isCorrect);
       setPointsEarned(points);
-      
+
       // Acumular Pontos da sessão
       if (points > 0) {
         setSessionPoints(prev => prev + points);
-        
+
         // Recarregar Pontos totais do usuário do banco (sincronização)
         setTimeout(async () => {
           try {
             const { data, error } = await supabase.rpc('get_user_dashboard', { user_id: user.id });
             if (!error) {
-                if (data?.user?.xp_total !== undefined) {
-                    setUserTotalPoints(data.user.xp_total);
-                } else if (data?.user?.total_points !== undefined) {
-                    setUserTotalPoints(data.user.total_points);
-                }
+              if (data?.user?.xp_total !== undefined) {
+                setUserTotalPoints(data.user.xp_total);
+              } else if (data?.user?.total_points !== undefined) {
+                setUserTotalPoints(data.user.total_points);
+              }
             }
           } catch (error) {
             console.error('Erro ao sincronizar Pontos totais:', error);
           }
         }, 500); // Aguardar 500ms para o trigger processar
       }
-      
+
       setShowResult(true);
 
       // Adicionar resultado ao array
@@ -235,12 +235,12 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
       setSelectedOption(null);
       setShowResult(false);
       setPointsEarned(0); // Reset apenas os Pontos da pergunta atual
-      
+
       // Reset animações
       slideAnim.setValue(0);
       pointsAnim.setValue(0);
       confettiAnim.setValue(0);
-      
+
     } else {
       // Quiz completo - enviar Pontos totais da sessão
       if (onComplete) {
@@ -253,14 +253,14 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
     if (!showResult) {
       return selectedOption === optionIndex ? styles.optionSelected : styles.option;
     }
-    
+
     // Mostrar resultado
     if (optionIndex === currentQuiz.correct_answer_index) {
       return styles.optionCorrect;
     } else if (selectedOption === optionIndex && !isCorrect) {
       return styles.optionIncorrect;
     }
-    
+
     return styles.option;
   };
 
@@ -417,140 +417,166 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F8FAF9',
     padding: 20,
   },
   progressContainer: {
-    marginBottom: 30,
+    marginBottom: 28,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#E9ECEF',
+    backgroundColor: '#E5E7EB',
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#28A745',
+    backgroundColor: '#129151',
     borderRadius: 4,
   },
   progressText: {
     textAlign: 'center',
     marginTop: 8,
-    fontSize: 14,
-    color: '#6C757D',
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '700',
   },
   questionContainer: {
     backgroundColor: '#FFFFFF',
     padding: 24,
-    borderRadius: 16,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    borderRadius: 20,
+    marginBottom: 24,
+    shadowColor: '#129151',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 4,
   },
   questionText: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#212529',
+    fontWeight: '800',
+    color: '#1F2937',
     textAlign: 'center',
     lineHeight: 28,
   },
   optionsContainer: {
     flex: 1,
+    gap: 12,
   },
   option: {
     backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: 18,
+    borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#E9ECEF',
+    borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
   optionSelected: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#2196F3',
+    backgroundColor: '#ECFDF5',
+    borderColor: '#129151',
     borderWidth: 2,
+    shadowColor: '#129151',
+    shadowOpacity: 0.12,
+    elevation: 4,
   },
   optionCorrect: {
-    backgroundColor: '#E8F5E8',
-    borderColor: '#28A745',
+    backgroundColor: '#DCFCE7',
+    borderColor: '#129151',
     borderWidth: 2,
+    shadowColor: '#129151',
+    shadowOpacity: 0.15,
+    elevation: 4,
   },
   optionIncorrect: {
-    backgroundColor: '#FFEBEE',
-    borderColor: '#DC3545',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
     borderWidth: 2,
+    shadowColor: '#EF4444',
+    shadowOpacity: 0.15,
+    elevation: 4,
   },
   optionText: {
-    fontSize: 16,
-    color: '#212529',
-    fontWeight: '500',
+    fontSize: 15,
+    color: '#374151',
+    fontWeight: '600',
     textAlign: 'center',
+    lineHeight: 22,
   },
   resultContainer: {
     alignItems: 'center',
     marginVertical: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   resultText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '800',
     marginBottom: 8,
   },
   correctText: {
-    color: '#28A745',
+    color: '#065F46',
   },
   incorrectText: {
-    color: '#DC3545',
+    color: '#991B1B',
   },
   pointsText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFD700',
+    fontWeight: '800',
+    color: '#D97706',
   },
   actionContainer: {
-    paddingVertical: 20,
+    paddingVertical: 16,
   },
   submitButton: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 16,
     alignItems: 'center',
+    shadowColor: '#129151',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   submitButtonActive: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#129151',
   },
   submitButtonDisabled: {
-    backgroundColor: '#6C757D',
+    backgroundColor: '#D1D5DB',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   nextButton: {
-    backgroundColor: '#28A745',
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: '#129151',
+    padding: 18,
+    borderRadius: 16,
     alignItems: 'center',
+    shadowColor: '#129151',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
   nextButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   pointsInfoContainer: {
     position: 'absolute',
@@ -559,26 +585,30 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   totalPointsContainer: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#FEF3C7',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
   },
   totalPointsText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
+    color: '#D97706',
+    fontWeight: '800',
+    fontSize: 13,
   },
   sessionPointsContainer: {
-    backgroundColor: '#28A745',
+    backgroundColor: '#ECFDF5',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   sessionPointsText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: '#065F46',
+    fontWeight: '700',
     fontSize: 12,
   },
   confettiContainer: {
