@@ -22,6 +22,32 @@ export const useDashboard = () => {
       setLoading(true);
       setError(null);
 
+      if (!user?.id) {
+        setDashboardData(null);
+        setLoading(false);
+        return;
+      }
+
+      const email = user.email || '';
+      const nameFromMeta = user.user_metadata?.name;
+      const nameFallback = email ? email.split('@')[0] : 'Usuário';
+      const validRoles = ['funcionario', 'gerente', 'admin', 'caixa', 'franqueado'];
+      const metaRole = user.user_metadata?.role;
+      const userRole = validRoles.includes(metaRole) ? metaRole : 'funcionario';
+
+      const { error: upsertError } = await supabase.from('users').upsert(
+        {
+          id: user.id,
+          email,
+          name: nameFromMeta || nameFallback,
+          role: userRole,
+          is_active: true,
+        },
+        { onConflict: 'id' }
+      );
+
+      if (upsertError) throw upsertError;
+
       // Buscar dados completos do dashboard
       const { data, error } = await supabase
         .rpc('get_user_dashboard', {

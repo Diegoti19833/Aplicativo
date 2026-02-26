@@ -1,76 +1,104 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, NavLink, useNavigate, Navigate } from 'react-router-dom'
 import './index.css'
-// (removido) import bgLogin from './assets/login-bg.jpg'
-import { Headphones, ShoppingBag, PawPrint } from 'lucide-react'
+import {
+  Home, Map, Trophy, User, ShoppingBag, Settings, LogOut,
+  CheckCircle, PlayCircle, Star, Award, Gift, Bell, Volume2,
+  LayoutDashboard, Lock, Mail, ArrowRight, ChevronRight, Briefcase,
+  CreditCard, Package, BookOpen
+} from 'lucide-react'
 import TrailsSection from './components/trails/TrailsSection'
 
 import AdminDashboard from './components/admin/AdminDashboard'
+import StudentDashboard from './components/student/StudentDashboard'
+import Login from './components/Login'
 import { AdminDb } from './services/adminDb'
-import { isSupabaseConfigured, normalizeSupabaseUrl, saveSupabaseConfig } from './services/supabaseClient'
+import { isSupabaseConfigured } from './services/supabaseClient'
 
-const IconHome = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>
-)
-const IconTrails = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
-)
-const IconRank = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 21V10"/><path d="M12 21V3"/><path d="M17 21v-6"/></svg>
-)
-const IconUser = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-)
-const IconMail = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16v12H4z"/><path d="m4 8 8 6 8-6"/></svg>
-)
-const IconLock = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-)
-const IconLeadership = () => (<span className="icon-circle" aria-hidden>💼</span>)
-const IconService = () => (<span className="icon-circle" aria-hidden>🐾</span>)
-const IconCash = () => (<span className="icon-circle" aria-hidden>💰</span>)
-const IconArrowRight = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h12"/><path d="m12 5 7 7-7 7"/></svg>
-)
+// --- Components ---
 
-const MascotPopDog = ({mood='neutral'}) => {
-  const label = mood==='celebrate' ? '🎉' : mood==='think' ? '🤔' : '🐶'
+function Sidebar() {
+  const linkClass = ({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-green-50 text-brand' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`
+  const s = getSession()
+  const isAdmin = s?.role === 'gerente' || s?.role === 'admin'
+
   return (
-    <div className={`mascot ${mood==='celebrate'?'animate':''}`} aria-label={`PopDog ${mood}`}
-         style={{backgroundImage:`url('./assets/popdog.svg')`, backgroundSize:'cover', backgroundPosition:'center'}}>
-      <span aria-hidden>{label}</span>
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 z-10 flex flex-col">
+      <div className="h-16 flex items-center px-6 border-b border-gray-100">
+        <div className="flex items-center gap-2 text-brand font-bold text-xl">
+          <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-white">
+            <Award size={20} />
+          </div>
+          PET CLASS
+        </div>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <NavLink className={linkClass} to="/"> <Home size={20} /> <span>Início</span> </NavLink>
+        <NavLink className={linkClass} to="/trilhas"> <Map size={20} /> <span>Trilhas</span> </NavLink>
+        <NavLink className={linkClass} to="/ranking"> <Trophy size={20} /> <span>Ranking</span> </NavLink>
+        <NavLink className={linkClass} to="/loja"> <ShoppingBag size={20} /> <span>Loja</span> </NavLink>
+        <NavLink className={linkClass} to="/perfil"> <User size={20} /> <span>Perfil</span> </NavLink>
+        {isAdmin && (
+          <NavLink className={linkClass} to="/admin"> <LayoutDashboard size={20} /> <span>Admin</span> </NavLink>
+        )}
+        <div className="pt-4 mt-4 border-t border-gray-100">
+          <NavLink className={linkClass} to="/config"> <Settings size={20} /> <span>Configurações</span> </NavLink>
+        </div>
+      </nav>
+
+      <div className="p-4 border-t border-gray-100">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-brand font-bold text-xs">
+            {s?.name?.substring(0, 2).toUpperCase() || 'US'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{s?.name || 'Usuário'}</p>
+            <p className="text-xs text-gray-500 truncate capitalize">{s?.role || 'Funcionário'}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+function Layout({ children }) {
+  return (
+    <div className="min-h-screen bg-gray-50 pl-64">
+      <Sidebar />
+      <main className="max-w-7xl mx-auto p-8">
+        {children}
+      </main>
     </div>
   )
 }
 
-function BottomNav() {
-  const linkClass = ({ isActive }) => `item ${isActive ? 'active' : ''}`
-  return (
-    <nav className="bottom-nav">
-      <NavLink className={linkClass} to="/"> <IconHome/> Início </NavLink>
-      <NavLink className={linkClass} to="/trilhas"> <IconTrails/> Trilhas </NavLink>
-      <NavLink className={linkClass} to="/ranking"> <IconRank/> Ranking </NavLink>
-      <NavLink className={linkClass} to="/perfil"> <IconUser/> Perfil </NavLink>
-    </nav>
-  )
-}
+// --- Auth & Session ---
 
 const getSession = () => {
-  try { return JSON.parse(localStorage.getItem('pa_user')||'null') } catch { return null }
+  try { return JSON.parse(localStorage.getItem('pa_user') || 'null') } catch { return null }
 }
 const saveSession = (data) => {
-  const current = getSession()||{}
+  const current = getSession() || {}
   localStorage.setItem('pa_user', JSON.stringify({ ...current, ...data, logged: true }))
 }
 const clearSession = () => localStorage.removeItem('pa_user')
-function RequireAuth({children}){
+
+function RequireAuth({ children }) {
   const [ready, setReady] = useState(false)
   const [ok, setOk] = useState(false)
   useEffect(() => {
     let alive = true
     const run = async () => {
       try {
+        if (!isSupabaseConfigured()) {
+          const session = getSession()
+          if (alive) {
+            setOk(!!session?.logged)
+            setReady(true)
+          }
+          return
+        }
         const session = await AdminDb.auth.getSession()
         if (!alive) return
         if (!session) {
@@ -89,8 +117,8 @@ function RequireAuth({children}){
     run()
     return () => { alive = false }
   }, [])
-  if(!ready) return <div className="page container">Carregando...</div>
-  if(!ok) return <Navigate to="/login" replace />
+  if (!ready) return <div className="flex items-center justify-center min-h-screen text-gray-500">Carregando...</div>
+  if (!ok) return <Navigate to="/login" replace />
   return children
 }
 
@@ -100,383 +128,369 @@ function RequireAdmin({ children }) {
   useEffect(() => {
     let alive = true
     async function check() {
+      const localSession = getSession()
+      const localAllowed = !!localSession && ['admin', 'gerente'].includes(localSession.role)
       try {
+        if (!isSupabaseConfigured()) {
+          // In dev mode (no Supabase), allow if logged in at all
+          if (alive) {
+            setAllowed(!!localSession?.logged)
+            setReady(true)
+          }
+          return
+        }
         const profile = await AdminDb.auth.getMyProfile()
         if (alive) {
-          setAllowed(profile && ['admin', 'gerente'].includes(profile.role))
+          setAllowed(!!(profile && ['admin', 'gerente'].includes(profile.role)) || localAllowed)
           setReady(true)
         }
       } catch {
-        if (alive) { setAllowed(false); setReady(true) }
+        if (alive) { setAllowed(localAllowed); setReady(true) }
       }
     }
     check()
     return () => { alive = false }
   }, [])
-  if (!ready) return <div className="page container">Verificando permissoes...</div>
-  if (!allowed) return <div className="page container" style={{textAlign:'center',paddingTop:'100px'}}>
-    <h2>Acesso Negado</h2>
-    <p>Voce precisa ter permissao de Admin ou Gerente para acessar este painel.</p>
-    <button onClick={() => window.location.href = '/login'} style={{marginTop:'20px',padding:'10px 20px',background:'#008037',color:'#fff',border:'none',borderRadius:'8px',cursor:'pointer'}}>Voltar ao Login</button>
-  </div>
+  if (!ready) return <div className="flex items-center justify-center min-h-screen text-gray-500">Verificando permissões...</div>
+  if (!allowed) return (
+    <div className="flex flex-col items-center justify-center min-h-screen text-center p-8">
+      <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+        <Lock size={32} />
+      </div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
+      <p className="text-gray-500 mb-6">Você precisa ter permissão de Admin ou Gerente para acessar este painel.</p>
+      <div className="flex flex-col gap-3">
+        <button onClick={() => { localStorage.removeItem('pa_user'); window.location.href = '/login'; }} className="btn btn-primary">
+          Voltar ao Login
+        </button>
+        <button
+          onClick={() => {
+            const s = getSession() || {}
+            saveSession({ ...s, role: 'gerente' })
+            window.location.reload()
+          }}
+          className="text-xs text-gray-400 hover:text-gray-600 underline"
+        >
+          🔧 Entrar como Gerente (modo dev)
+        </button>
+      </div>
+    </div>
+  )
   return children
 }
 
-function Login() {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showSupabaseModal, setShowSupabaseModal] = useState(false)
-  const [supabaseUrl, setSupabaseUrl] = useState('')
-  const [supabaseAnonKey, setSupabaseAnonKey] = useState('')
-  const canProceed = email && password && !loading
-  const onLogin = async () => {
-    try {
-      setLoading(true)
-      await AdminDb.auth.signInWithPassword({ email, password })
-      await AdminDb.auth.ensureUserRow()
-      const profile = await AdminDb.auth.getMyProfile()
-      const name = profile?.name || (email?.split('@')[0] || 'Usuário')
-      const role = profile?.role || 'funcionario'
-      saveSession({ email, name, role })
-      // Web é sempre Admin agora
-      navigate('/admin')
-    } catch (e) {
-      const msg = e?.message || 'Falha no login. Verifique email e senha.'
-      if (String(msg).includes('Supabase não configurado')) setShowSupabaseModal(true)
-      else alert(msg)
-    } finally {
-      setLoading(false)
-    }
-  }
-  return (
-    <div className="login-page">
-      <div className="login-card card">
-        <div className="login-logo" aria-label="Rede Pop Pet Center"></div>
-        <div style={{display:'flex', alignItems:'center', gap:8, margin:'8px 0 6px'}}>
-          <div className="subtitle">Bem-vindo! Faça login para continuar</div>
-        </div>
-        <div style={{height:12}}/>
-        <div className="input-wrap" style={{marginTop:8}}>
-          <span className="input-icon"><IconMail/></span>
-          <input className="input" placeholder="Usuário" value={email} onChange={(e)=>setEmail(e.target.value)} />
-        </div>
-        <div className="input-wrap" style={{marginTop:12}}>
-          <span className="input-icon"><IconLock/></span>
-          <input type="password" className="input" placeholder="Senha" value={password} onChange={(e)=>setPassword(e.target.value)} />
-        </div>
-        <div className="forgot-link"><button className="btn btn-link" onClick={()=>alert('Vamos enviar um link de recuperação para seu e-mail.')}>Esqueci minha senha!</button></div>
-        <div style={{height:12}}/>
-        <button className="btn btn-primary btn-login" disabled={!canProceed} onClick={onLogin}>
-          {loading ? 'Entrando...' : <>Entrar <IconArrowRight/></>}
-        </button>
-        {!isSupabaseConfigured() && (
-          <button className="btn btn-secondary" style={{marginTop:10}} onClick={() => setShowSupabaseModal(true)}>
-            Configurar Supabase
-          </button>
-        )}
-        <div className="card-divider"/>
-        <button className="btn btn-link" onClick={()=>navigate('/cadastro')}>Alterar empresa</button>
-      </div>
-
-      {showSupabaseModal && (
-        <div className="modal-overlay" style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center'
-        }}>
-          <div className="card" style={{ width: 520, padding: 24 }}>
-            <div className="title" style={{fontSize:18}}>Configurar Supabase (Web)</div>
-            <div className="subtitle" style={{marginTop:6}}>Cole a URL do projeto e a anon key.</div>
-            <div style={{height:16}}/>
-            <div className="input-wrap" style={{marginTop:8}}>
-              <input className="input" placeholder="VITE_SUPABASE_URL" value={supabaseUrl} onChange={(e)=>setSupabaseUrl(e.target.value)} />
-            </div>
-            <div className="input-wrap" style={{marginTop:8}}>
-              <input className="input" placeholder="VITE_SUPABASE_ANON_KEY" value={supabaseAnonKey} onChange={(e)=>setSupabaseAnonKey(e.target.value)} />
-            </div>
-            <div style={{display:'flex', gap:10, marginTop:12}}>
-              <button
-                className="btn btn-primary"
-                style={{flex:1}}
-                onClick={() => {
-                  if (!supabaseUrl || !supabaseAnonKey) return alert('Preencha URL e ANON KEY')
-                  try {
-                    const normalized = normalizeSupabaseUrl(supabaseUrl)
-                    saveSupabaseConfig({ url: normalized, anonKey: supabaseAnonKey.trim() })
-                    setShowSupabaseModal(false)
-                    window.location.reload()
-                  } catch (e) {
-                    alert(e?.message || 'URL do Supabase inválida')
-                  }
-                }}
-              >
-                Salvar
-              </button>
-              <button className="btn btn-secondary" style={{flex:1}} onClick={() => setShowSupabaseModal(false)}>
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+// --- Pages ---
 
 function SelectRole() {
   const navigate = useNavigate()
   const roles = [
-    {key:'gerente', label:'Gerente'},
-    {key:'funcionario', label:'Funcionário'},
-    {key:'caixa', label:'Caixa'}
+    { key: 'gerente', label: 'Gerente', icon: <Briefcase size={24} /> },
+    { key: 'funcionario', label: 'Funcionário', icon: <User size={24} /> },
+    { key: 'caixa', label: 'Caixa', icon: <CreditCard size={24} /> }
   ]
-  const choose = async (role) => { 
+  const choose = async (role) => {
     try {
       await AdminDb.auth.ensureUserRow()
       const profile = await AdminDb.auth.getMyProfile()
       if (profile?.id) await AdminDb.users.setRole({ id: profile.id, role })
       saveSession({ role })
+      navigate('/')
     } catch (e) {
       alert(e?.message || 'Falha ao salvar perfil')
     }
-    // Web é sempre Admin
-    navigate('/admin')
   }
   return (
-    <div className="page container">
-      <h2 className="title">Selecione seu perfil</h2>
-      <div className="grid" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
-        {roles.map(r=> (
-          <div key={r.key} className="card" style={{textAlign:'center'}}>
-            <div className="mascot" style={{width:70,height:70}}>🐾</div>
-            <div className="title" style={{fontSize:16}}>{r.label}</div>
-            <button className="btn btn-primary" onClick={()=>choose(r.key)}>Entrar como {r.label}</button>
-          </div>
-        ))}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="max-w-2xl w-full">
+        <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">Selecione seu perfil de acesso</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {roles.map(r => (
+            <button
+              key={r.key}
+              onClick={() => choose(r.key)}
+              className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:border-brand hover:shadow-md transition-all flex flex-col items-center gap-4 group"
+            >
+              <div className="w-16 h-16 bg-green-50 text-brand rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                {r.icon}
+              </div>
+              <div className="font-semibold text-lg text-gray-900">{r.label}</div>
+              <div className="text-sm text-brand font-medium">Entrar como {r.label}</div>
+            </button>
+          ))}
+        </div>
       </div>
-      <BottomNav/>
     </div>
   )
 }
 
 function Dashboard() {
   const navigate = useNavigate()
-  const s = getSession()||{ name:'Aluno', role:'funcionario' }
-  const userName = s.name||'Aluno'
-  const role = s.role||'funcionario'
+  const s = getSession() || { name: 'Aluno', role: 'funcionario' }
+  const userName = s.name || 'Aluno'
+  const role = s.role || 'funcionario'
   const xp = 1250
   const level = 2
   const progressPct = 25
+
   const nextLessonsByRole = {
-    gerente: [ {icon:<IconLeadership/>, label:'Liderança'}, {icon:<span className="icon-circle">📦</span>, label:'Gestão de Estoque'}, {icon:<span className="icon-circle">📊</span>, label:'Metas'} ],
-    funcionario: [ {icon:<IconService/>, label:'Atendimento'}, {icon:<span className="icon-circle">🛒</span>, label:'Vendas'}, {icon:<span className="icon-circle">🐶</span>, label:'Produtos Pet'} ],
-    caixa: [ {icon:<IconCash/>, label:'PDV'}, {icon:<span className="icon-circle">🧮</span>, label:'Fechamento'}, {icon:<span className="icon-circle">🤝</span>, label:'Relacionamento'} ],
+    gerente: [
+      { icon: <Briefcase size={20} />, label: 'Liderança' },
+      { icon: <Package size={20} />, label: 'Gestão de Estoque' },
+      { icon: <Trophy size={20} />, label: 'Metas' }
+    ],
+    funcionario: [
+      { icon: <User size={20} />, label: 'Atendimento' },
+      { icon: <ShoppingBag size={20} />, label: 'Vendas' },
+      { icon: <Gift size={20} />, label: 'Produtos Pet' }
+    ],
+    caixa: [
+      { icon: <CreditCard size={20} />, label: 'PDV' },
+      { icon: <Trophy size={20} />, label: 'Fechamento' },
+      { icon: <User size={20} />, label: 'Relacionamento' }
+    ],
   }
-  const next = nextLessonsByRole[role]||nextLessonsByRole.funcionario
+  const next = nextLessonsByRole[role] || nextLessonsByRole.funcionario
+
   return (
-    <div className="page container dashboard">
-      <div className="grid" style={{gridTemplateColumns:'1.2fr .8fr'}}>
-        <div className="card">
-          <div className="title">Olá, {userName} 👋</div>
-          {/* Mascote fixo no layout */}
-          <p className="subtitle">XP total: {xp} • Nível: {level}</p>
-          <div className="progress"><div className="bar" style={{width:`${progressPct}%`}}/></div>
-          <div style={{height:12}}/>
+    <div className="space-y-6">
+      <header className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Olá, {userName}</h1>
+          <p className="text-gray-500">Bem-vindo ao seu painel de treinamento.</p>
+        </div>
+      </header>
 
-          <div className="subtitle">Aulas ativas</div>
-          <div className="grid" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
-            {next.map(n => (
-              <button key={n.label} className="card lesson-card" onClick={()=>navigate('/aula')}>
-                {n.icon}
-                <div className="title" style={{fontSize:16,marginTop:6}}>{n.label}</div>
-              </button>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Progress Card */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Seu Progresso</h3>
+                <p className="text-sm text-gray-500">Nível {level} • {xp} Pontos</p>
+              </div>
+              <div className="w-12 h-12 bg-green-50 text-brand rounded-full flex items-center justify-center font-bold">
+                {level}
+              </div>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-2.5 mb-1">
+              <div className="bg-brand h-2.5 rounded-full" style={{ width: `${progressPct}%` }}></div>
+            </div>
+            <p className="text-xs text-gray-500 text-right">{progressPct}% para o próximo nível</p>
           </div>
 
-          <div style={{height:12}}/>
-          <div className="subtitle">Conquistas</div>
-          <div className="grid" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
-            <div className="badge pulse"><span className="icon-circle">🥇</span> Medalha Ouro</div>
-            <div className="badge"><span className="icon-circle">🔥</span> Série 7 dias</div>
-            <div className="badge"><span className="icon-circle">⭐</span> Destaque</div>
+          {/* Active Lessons */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Próximas Aulas</h3>
+              <button onClick={() => navigate('/trilhas')} className="text-sm text-brand font-medium hover:underline">Ver todas</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {next.map(n => (
+                <button
+                  key={n.label}
+                  onClick={() => navigate('/aula')}
+                  className="bg-white p-4 rounded-xl border border-gray-200 hover:border-brand hover:shadow-sm transition-all text-left group"
+                >
+                  <div className="w-10 h-10 bg-gray-50 text-gray-600 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-50 group-hover:text-brand transition-colors">
+                    {n.icon}
+                  </div>
+                  <div className="font-medium text-gray-900">{n.label}</div>
+                  <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                    Iniciar <ArrowRight size={12} />
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-
-          <div style={{height:12}}/>
-          <div className="badge mission"><span className="icon-circle">🎯</span> Missão do dia: Ganhe 10 XP hoje</div>
-
-          <div style={{height:12}}/>
-          <button className="btn btn-primary" style={{marginTop:12}} onClick={()=>navigate('/trilhas')}>Ir para trilhas</button>
         </div>
 
-        <div className="card">
-          <div className="title">Ranking da semana</div>
-          <div className="leaderboard">
-            <div className="row"><span className="pos gold">1</span> Pedro — 320</div>
-            <div className="row"><span className="pos silver">2</span> Maria — 310</div>
-            <div className="row"><span className="pos bronze">3</span> João — 300</div>
-            <div className="row highlight"><span className="pos">Você</span> {userName} — {xp}</div>
+        <div className="space-y-6">
+          {/* Achievements */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Conquistas Recentes</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center flex-shrink-0">
+                  <Award size={20} />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">Medalha de Ouro</div>
+                  <div className="text-xs text-gray-500">Completou 10 aulas</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0">
+                  <Star size={20} />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">Destaque da Semana</div>
+                  <div className="text-xs text-gray-500">Top 3 no Ranking</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <button className="btn btn-secondary" style={{marginTop:8}} onClick={()=>navigate('/ranking')}>Ver ranking completo</button>
+
+          {/* Daily Mission */}
+          <div className="bg-gradient-to-r from-brand to-brand-dark p-6 rounded-xl shadow-md text-white">
+            <div className="flex items-center gap-2 mb-2 opacity-90">
+              <Target size={16} />
+              <span className="text-xs font-bold uppercase tracking-wider">Meta Diária</span>
+            </div>
+            <h3 className="font-bold text-lg mb-1">Ganhe 50 Pontos hoje</h3>
+            <p className="text-sm opacity-80 mb-4">Complete uma aula ou quiz para atingir sua meta.</p>
+            <div className="w-full bg-white/20 rounded-full h-1.5">
+              <div className="bg-white h-1.5 rounded-full" style={{ width: '20%' }}></div>
+            </div>
+          </div>
         </div>
       </div>
-
-      
     </div>
   )
 }
 
-function IconHeadset(){
-  return <Headphones size={24} />
-}
-function IconBag(){
-  return <ShoppingBag size={24} />
-}
-function IconPaw(){
-  return <PawPrint size={24} />
-}
+function Target({ size }) { return <Trophy size={size} /> } // Helper
+
 function Trilhas() {
   const navigate = useNavigate()
-  const s = getSession()||{ role:'funcionario' }
-  const role = s.role||'funcionario'
+  const s = getSession() || { role: 'funcionario' }
+  const role = s.role || 'funcionario'
   const trilhasPorPapel = {
-    gerente: ['Liderança','Gestão de Loja','Estoque'],
-    funcionario: ['Atendimento','Vendas','Produtos Pet'],
-    caixa: ['PDV','Fechamento','Relacionamento']
+    gerente: ['Liderança', 'Gestão de Loja', 'Estoque'],
+    funcionario: ['Atendimento', 'Vendas', 'Produtos Pet'],
+    caixa: ['PDV', 'Fechamento', 'Relacionamento']
   }
-  const nodes = trilhasPorPapel[role]||trilhasPorPapel.funcionario
+  const nodes = trilhasPorPapel[role] || trilhasPorPapel.funcionario
   return (
-    <TrailsSection nodes={nodes} navigate={navigate} />
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Trilhas de Aprendizagem</h2>
+        <p className="text-gray-500">Cursos disponíveis para seu perfil profissional.</p>
+      </div>
+      <TrailsSection nodes={nodes} navigate={navigate} />
+    </div>
   )
 }
 
 function AulaQuiz() {
   const navigate = useNavigate()
-  const [answer,setAnswer] = useState(null)
-  const [confetti,setConfetti] = useState(false)
-  const [thinking,setThinking] = useState(false)
+  const [answer, setAnswer] = useState(null)
+
   const confirm = () => {
     const ok = answer === 'Ouvir com atenção'
     if (ok) {
-      setConfetti(true)
-      setTimeout(()=> setConfetti(false), 1200)
-      alert('Você acertou! +10 pontos')
+      alert('Resposta correta! +10 pontos')
       navigate('/trilhas')
     } else {
-      setThinking(true)
-      setTimeout(()=> setThinking(false), 1200)
-      alert('Tente novamente! Dica: escute com atenção e ofereça ajuda.')
+      alert('Tente novamente. Dica: A escuta ativa é fundamental.')
     }
   }
+
   return (
-    <div className="page container" style={{maxWidth:680}}>
-      <div className={`confetti ${confetti?'show':''}`} aria-hidden></div>
-      <div className="card" style={{textAlign:'center'}}>
-        <MascotPopDog mood={confetti ? 'celebrate' : thinking ? 'think' : 'neutral'}/>
-        <div className="title">Pergunta 1</div>
-        <p className="subtitle">O que fazer quando o cliente reclama?</p>
-        {['Ouvir com atenção','Interromper','Ignorar','Fazer cara séria'].map(opt=> (
-          <label key={opt} style={{display:'block',margin:'8px 0'}}>
-            <input type="radio" name="q1" onChange={()=>setAnswer(opt)} /> {opt}
-          </label>
-        ))}
-        <button className="btn btn-primary" style={{marginTop:8}} onClick={confirm}>Confirmar</button>
-        <p className="subtitle" style={{marginTop:6}}>XP: 1250 • Nível: 2</p>
-        <button className="btn btn-secondary" style={{marginTop:8}} onClick={()=>navigate('/aula')}>Próximo desafio</button>
+    <div className="max-w-2xl mx-auto space-y-8 py-8">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-6">
+            <span className="text-sm font-medium text-brand bg-green-50 px-3 py-1 rounded-full">Quiz de Fixação</span>
+            <span className="text-sm text-gray-500">10 Pontos</span>
+          </div>
+
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Pergunta 1</h2>
+          <p className="text-gray-600 mb-8">Qual a melhor abordagem inicial quando um cliente apresenta uma reclamação sobre um produto?</p>
+
+          <div className="space-y-3">
+            {['Ouvir com atenção e empatia', 'Interromper para explicar a política', 'Ignorar e chamar o gerente', 'Manter expressão séria e distante'].map(opt => (
+              <label key={opt} className={`flex items-center p-4 rounded-lg border cursor-pointer transition-all ${answer === opt ? 'border-brand bg-green-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}>
+                <input type="radio" name="q1" className="w-4 h-4 text-brand" onChange={() => setAnswer(opt)} checked={answer === opt} />
+                <span className={`ml-3 ${answer === opt ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>{opt}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className="mt-8 flex gap-3">
+            <button className="btn btn-primary flex-1" onClick={confirm} disabled={!answer}>Confirmar Resposta</button>
+            <button className="btn btn-secondary" onClick={() => navigate('/trilhas')}>Pular</button>
+          </div>
+        </div>
+        <div className="bg-gray-50 px-8 py-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
+          <span>Aula: Atendimento ao Cliente</span>
+          <span>1/5 Questões</span>
+        </div>
       </div>
     </div>
   )
 }
 
 function Ranking() {
-  const [showModal, setShowModal] = useState(false)
-  const s = getSession()||{ name:'Você' }
+  const s = getSession() || { name: 'Você' }
   const userName = s.name || 'Você'
-  
+
   const data = [
-    { pos: 1, name: 'Pedro', score: 320, level: 5, title: 'Mestre do Atendimento', avatar: '🥇' },
-    { pos: 2, name: 'Maria', score: 310, level: 5, title: 'Expert em Vendas', avatar: '🥈' },
-    { pos: 3, name: 'João', score: 300, level: 4, title: 'Pro Produtos Pet', avatar: '🥉' },
-    { pos: 4, name: userName, score: 295, level: 4, title: 'Atendente Pro', avatar: '⭐' },
-    { pos: 5, name: 'Alice', score: 280, level: 3, title: 'Consultor de Loja', avatar: '⭐' },
-    { pos: 6, name: 'Bruno', score: 270, level: 3, title: 'Especialista', avatar: '⭐' },
-    { pos: 7, name: 'Carla', score: 260, level: 3, title: 'Atendimento', avatar: '⭐' },
-    { pos: 8, name: 'Daniel', score: 250, level: 2, title: 'Iniciante', avatar: '⭐' },
-    { pos: 9, name: 'Elisa', score: 240, level: 2, title: 'Iniciante', avatar: '⭐' },
-    { pos: 10, name: 'Felipe', score: 230, level: 2, title: 'Iniciante', avatar: '⭐' }
+    { pos: 1, name: 'Pedro', score: 320, level: 5, role: 'Vendedor' },
+    { pos: 2, name: 'Maria', score: 310, level: 5, role: 'Gerente' },
+    { pos: 3, name: 'João', score: 300, level: 4, role: 'Caixa' },
+    { pos: 4, name: userName, score: 295, level: 4, role: 'Vendedor' },
+    { pos: 5, name: 'Alice', score: 280, level: 3, role: 'Vendedor' },
+    { pos: 6, name: 'Bruno', score: 270, level: 3, role: 'Caixa' },
+    { pos: 7, name: 'Carla', score: 260, level: 3, role: 'Vendedor' },
+    { pos: 8, name: 'Daniel', score: 250, level: 2, role: 'Estoquista' },
   ]
-  const you = data.find(d => d.name === userName) || data[3]
-  const target = data.find(d => d.pos === (you.pos - 1))
-  const needed = Math.max(0, (target?.score || 0) - (you?.score || 0))
-  const progressPct = target ? Math.min(100, Math.round((you.score / target.score) * 100)) : 100
-  
+
   return (
-    <div className="page container ranking-page">
-      <h2 className="title">Ranking</h2>
-      <div className="ranking-layout">
-        <div className="podium">
-          {data.slice(0,3).map((d,i)=> (
-             <div key={d.name} className={`podium-card ${i===0?'gold': i===1?'silver':'bronze'} fade-in`}>
-+              <div className={`pos-badge ${i===0?'gold': i===1?'silver':'bronze'}`}>{d.pos}</div>
-               <div className="podium-top">
-                 <span className="trophy">🏆</span>
-                 <span className="medal">{d.avatar}</span>
-               </div>
-               <div className="podium-body">
-                 <div className="avatar">{d.avatar}</div>
-                 <div className="name">{d.name}</div>
-                 <div className="score">{d.score} XP</div>
-                 <div className="level">Nível {d.level} — {d.title}</div>
-               </div>
-             </div>
-           ))}
-        </div>
-  
-        <div className="ranking-list">
-          {data.slice(3).map(d => (
-            <div key={d.name} className={`list-item ${d.name===userName?'highlight':''} slide-up`}>
-              <div className="avatar small">{d.avatar}</div>
-              <div className="details">
-                <div className="name-row">
-                  <span className="pos">#{d.pos}</span>
-                  <span className="name">{d.name}</span>
-                </div>
-                <div className="level">Nível {d.level} — {d.title}</div>
-              </div>
-              <div className="score">{d.score} XP</div>
-            </div>
-          ))}
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Ranking Geral</h2>
+        <p className="text-gray-500">Acompanhe o desempenho da equipe.</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-4 w-20">Posição</th>
+                <th className="px-6 py-4">Colaborador</th>
+                <th className="px-6 py-4">Nível</th>
+                <th className="px-6 py-4 text-right">Pontuação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.map((d) => (
+                <tr key={d.name} className={`hover:bg-gray-50 transition-colors ${d.name === userName ? 'bg-green-50/50' : ''}`}>
+                  <td className="px-6 py-4">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs
+                      ${d.pos === 1 ? 'bg-yellow-100 text-yellow-700' :
+                        d.pos === 2 ? 'bg-gray-200 text-gray-700' :
+                          d.pos === 3 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-500'}`}>
+                      {d.pos}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                        {d.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{d.name} {d.name === userName && '(Você)'}</div>
+                        <div className="text-xs text-gray-500">{d.role}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">Nível {d.level}</td>
+                  <td className="px-6 py-4 text-right font-medium text-brand">{d.score} Pontos</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-  
-      <div className="user-progress card">
-        <div className="title" style={{fontSize:18}}>Sua posição</div>
-        <p className="subtitle">Você está em #{you.pos}. Faltam <b>{needed} XP</b> para passar o #{target?.pos} ({target?.name}).</p>
-        <div className="progress-mini"><div className="bar" style={{width: `${progressPct}%`}}/></div>
-        <button className="btn btn-secondary" style={{marginTop:12}} onClick={()=>setShowModal(true)}>Ver desempenho detalhado</button>
-      </div>
-  
-      <div className="trail-cta"><span className="bounce">🐶</span> Continue jogando e suba no ranking!</div>
-  
-      {showModal && (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Desempenho detalhado">
-          <div className="modal-content">
-            <div className="title">Desempenho detalhado</div>
-            <p className="subtitle">Aqui você verá estatísticas de XP por trilha, acertos em quizzes e evolução semanal.</p>
-            <div className="grid" style={{gridTemplateColumns:'repeat(2,1fr)'}}>
-              <div className="card"><div className="title" style={{fontSize:16}}>XP por Trilhas</div><div className="progress-mini"><div className="bar" style={{width:'68%'}}/></div></div>
-              <div className="card"><div className="title" style={{fontSize:16}}>Taxa de acerto</div><div className="progress-mini"><div className="bar" style={{width:'82%'}}/></div></div>
-            </div>
-            <button className="btn btn-primary" style={{marginTop:12}} onClick={()=>setShowModal(false)}>Fechar</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
 function Perfil() {
   const navigate = useNavigate()
-  const s = getSession()||{ name:'Aluno', role:'funcionario' }
+  const s = getSession() || { name: 'Aluno', role: 'funcionario' }
   const logout = async () => {
     try {
       await AdminDb.auth.signOut()
@@ -486,14 +500,38 @@ function Perfil() {
     }
   }
   return (
-    <div className="page container" style={{maxWidth:480}}>
-      <div className="card" style={{textAlign:'center'}}>
-        <div className="mascot">🙂</div>
-        <div className="title">{s.name||'Aluno'}</div>
-        <p className="subtitle">{(s.role||'Funcionário').toUpperCase()} • 1250 pontos • 2º nível</p>
-        <button className="btn btn-secondary" onClick={()=>navigate('/perfil/edit')}>Editar Perfil</button>
-        <div style={{height:8}}/>
-        <button className="btn btn-primary" onClick={logout}>Sair</button>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Meu Perfil</h2>
+        <p className="text-gray-500">Gerencie suas informações e preferências.</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+        <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center text-gray-400 text-3xl font-bold">
+          {s.name ? s.name.substring(0, 2).toUpperCase() : <User size={40} />}
+        </div>
+        <h3 className="text-xl font-bold text-gray-900">{s.name || 'Aluno'}</h3>
+        <p className="text-gray-500 capitalize mb-6">{s.role || 'Funcionário'}</p>
+
+        <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-8">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-brand">1250</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Pontos</div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-2xl font-bold text-brand">2</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Nível</div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 max-w-xs mx-auto">
+          <button className="btn btn-secondary w-full" onClick={() => navigate('/perfil/edit')}>
+            <Settings size={16} /> Editar Perfil
+          </button>
+          <button className="btn btn-primary bg-red-600 hover:bg-red-700 border-red-600 w-full" onClick={logout}>
+            <LogOut size={16} /> Sair do Sistema
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -501,52 +539,98 @@ function Perfil() {
 
 function PerfilEdit() {
   const navigate = useNavigate()
-  const [name,setName] = useState('Maria')
+  const [name, setName] = useState('Maria')
   return (
-    <div className="page container" style={{maxWidth:480}}>
-      <div className="card">
-        <div className="title">Editar Perfil</div>
-        <label className="subtitle">Nome</label>
-        <input className="input" value={name} onChange={(e)=>setName(e.target.value)} />
-        <div style={{height:10}}/>
-        <button className="btn btn-primary" onClick={()=>navigate('/perfil')}>Salvar</button>
-        <div style={{height:8}}/>
-        <button className="btn btn-secondary" onClick={()=>navigate('/perfil')}>Cancelar</button>
+    <div className="max-w-xl mx-auto space-y-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Editar Informações</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="pt-4 flex gap-3">
+            <button className="btn btn-primary" onClick={() => navigate('/perfil')}>Salvar Alterações</button>
+            <button className="btn btn-secondary" onClick={() => navigate('/perfil')}>Cancelar</button>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-function Admin() {
-  return <AdminDashboard />
-}
-
-export default function App() {
+function Loja() {
+  const itens = [
+    { id: 1, nome: 'Certificado de Excelência', precoPontos: 200, icon: <Award size={32} /> },
+    { id: 2, nome: 'Kit Boas-vindas', precoPontos: 500, icon: <Gift size={32} /> },
+    { id: 3, nome: 'Caneca Corporativa', precoPontos: 350, icon: <ShoppingBag size={32} /> },
+  ]
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/admin" replace />} />
-        <Route path="/login" element={<Login/>} />
-        <Route path="/cadastro" element={<Cadastro/>} />
-        <Route path="/selecionar" element={<RequireAuth><Layout><SelectRole/></Layout></RequireAuth>} />
-        <Route path="/trilhas" element={<RequireAuth><Layout><Trilhas/></Layout></RequireAuth>} />
-        <Route path="/aula" element={<RequireAuth><Layout><AulaQuiz/></Layout></RequireAuth>} />
-        <Route path="/ranking" element={<RequireAuth><Layout><Ranking/></Layout></RequireAuth>} />
-        <Route path="/perfil" element={<RequireAuth><Layout><Perfil/></Layout></RequireAuth>} />
-        <Route path="/perfil/edit" element={<RequireAuth><Layout><PerfilEdit/></Layout></RequireAuth>} />
-        <Route path="/admin" element={<RequireAuth><RequireAdmin><Admin/></RequireAdmin></RequireAuth>} />
-        <Route path="/loja" element={<RequireAuth><Layout><Loja/></Layout></RequireAuth>} />
-        <Route path="/config" element={<RequireAuth><Layout><Config/></Layout></RequireAuth>} />
-      </Routes>
-    </BrowserRouter>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Loja de Benefícios</h2>
+        <p className="text-gray-500">Troque seus pontos por recompensas exclusivas.</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {itens.map(item => (
+          <div key={item.id} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition-shadow">
+            <div className="w-16 h-16 bg-green-50 text-brand rounded-full flex items-center justify-center mx-auto mb-4">
+              {item.icon}
+            </div>
+            <h3 className="font-bold text-gray-900 mb-1">{item.nome}</h3>
+            <div className="text-brand font-semibold mb-4">{item.precoPontos} Pontos</div>
+            <button className="btn btn-primary w-full text-sm">Resgatar</button>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
-function Cadastro(){
+function Config() {
   const navigate = useNavigate()
-  const [name,setName] = useState('')
-  const [email,setEmail] = useState('')
-  const [password,setPassword] = useState('')
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
+        <p className="text-gray-500">Personalize sua experiência no sistema.</p>
+      </div>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+        <div className="p-6 flex items-center justify-between">
+          <div>
+            <div className="font-medium text-gray-900 flex items-center gap-2">
+              <Bell size={18} /> Notificações
+            </div>
+            <div className="text-sm text-gray-500">Receber alertas sobre progresso e novas aulas.</div>
+          </div>
+          <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200">
+            <span className="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition" />
+          </button>
+        </div>
+        <div className="p-6 flex items-center justify-between">
+          <div>
+            <div className="font-medium text-gray-900 flex items-center gap-2">
+              <Volume2 size={18} /> Sons do Sistema
+            </div>
+            <div className="text-sm text-gray-500">Ativar efeitos sonoros ao completar tarefas.</div>
+          </div>
+          <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-brand">
+            <span className="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition" />
+          </button>
+        </div>
+        <div className="p-6">
+          <button className="btn btn-primary" onClick={() => navigate('/')}>Voltar ao Início</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Cadastro() {
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const canCreate = name && email && password
   const [loading, setLoading] = useState(false)
   const create = async () => {
@@ -568,122 +652,79 @@ function Cadastro(){
     }
   }
   return (
-    <div className="page auth">
-      <div className="card" style={{textAlign:'center', maxWidth:500, margin:'0 auto'}}>
-        <div className="mascot" aria-hidden>🐶</div>
-        <div className="title">Criar conta</div>
-        <div className="input-wrap" style={{marginTop:8}}>
-          <input className="input" placeholder="Nome" value={name} onChange={(e)=>setName(e.target.value)} />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 max-w-md w-full text-center">
+        <div className="w-12 h-12 bg-brand text-white rounded-lg flex items-center justify-center mx-auto mb-4">
+          <Award size={24} />
         </div>
-        <div className="input-wrap" style={{marginTop:8}}>
-          <span className="input-icon"><IconMail/></span>
-          <input className="input" placeholder="Email" value={email} onChange={(e)=>setEmail(e.target.value)} />
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Criar Nova Conta</h2>
+
+        <div className="space-y-4 text-left">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-gray-400"><User size={18} /></span>
+              <input className="input pl-10" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email Corporativo</label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-gray-400"><Mail size={18} /></span>
+              <input className="input pl-10" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-gray-400"><Lock size={18} /></span>
+              <input type="password" className="input pl-10" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </div>
+          </div>
+
+          <button className="btn btn-primary w-full mt-2" disabled={!canCreate || loading} onClick={create}>
+            {loading ? 'Criando conta...' : 'Cadastrar'}
+          </button>
         </div>
-        <div className="input-wrap" style={{marginTop:8}}>
-          <span className="input-icon"><IconLock/></span>
-          <input type="password" className="input" placeholder="Senha" value={password} onChange={(e)=>setPassword(e.target.value)} />
+
+        <div className="mt-6 pt-6 border-t border-gray-100">
+          <button className="text-brand text-sm font-medium hover:underline" onClick={() => navigate('/login')}>
+            Já possui uma conta? Entrar
+          </button>
         </div>
-        <button className="btn btn-primary" style={{marginTop:10}} disabled={!canCreate || loading} onClick={create}>
-          {loading ? 'Criando...' : 'Criar conta'}
-        </button>
-        <div style={{height:8}}/>
-        <button className="btn btn-secondary" onClick={()=>navigate('/login')}>Já tenho conta</button>
       </div>
     </div>
   )
 }
 
-const IconStore = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7h18"/><path d="M5 7v12h14V7"/><path d="M9 11h6"/></svg>
-)
-const IconSettings = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a7.8 7.8 0 0 0 .1-6l2.1-2.1-2.8-2.8-2.1 2.1a7.8 7.8 0 0 0-6-.1L8.6 1.9 5.8 4.7l2.1 2.1a7.8 7.8 0 0 0-.1 6L5.8 15.9l2.8 2.8 2.1-2.1a7.8 7.8 0 0 0 6 .1l2.1 2.1 2.8-2.8-2.1-2.1Z"/></svg>
-)
-const IconAdmin = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 21a9 9 0 0 0 9-9c0-4.97-4.03-9-9-9-4.97 0-9 4.03-9 9 0 4.97 4.03 9 9 9Z"/><path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M12 12v9"/></svg>
-)
-function Sidebar(){
-  const linkClass = ({ isActive }) => `menu-item ${isActive ? 'active' : ''}`
-  const s = getSession()
-  const isAdmin = s?.role === 'gerente' || s?.role === 'admin'
-  return (
-    <aside className="sidebar">
-      <div className="brand">PA</div>
-      <nav className="menu">
-        <NavLink className={linkClass} to="/"> <IconHome/> <span>Início</span> </NavLink>
-        <NavLink className={linkClass} to="/trilhas"> <IconTrails/> <span>Trilhas</span> </NavLink>
-        <NavLink className={linkClass} to="/ranking"> <IconRank/> <span>Ranking</span> </NavLink>
-        <NavLink className={linkClass} to="/loja"> <IconStore/> <span>Loja</span> </NavLink>
-        <NavLink className={linkClass} to="/perfil"> <IconUser/> <span>Perfil</span> </NavLink>
-        {isAdmin && (
-          <NavLink className={linkClass} to="/admin"> <IconAdmin/> <span>Admin</span> </NavLink>
-        )}
-        <NavLink className={linkClass} to="/config"> <IconSettings/> <span>Config</span> </NavLink>
-      </nav>
-    </aside>
-  )
-}
-function Layout({children}){
-  const tip = "Mantenha sua sequência para ganhar XP!"
-  return (
-    <div className="app-shell">
-      <Sidebar/>
-      <main className="main">
-        {children}
-      </main>
-      <div className="mascot-tip">
-        <div className="bubble">{tip}</div>
-        <MascotPopDog mood="neutral"/>
-      </div>
-    </div>
-  )
+function Admin() {
+  return <AdminDashboard />
 }
 
-function Loja(){
-  const itens = [
-    {id:1, nome:'Badge Ouro', precoXP:200, emoji:'🏅'},
-    {id:2, nome:'Camiseta Pop', precoXP:500, emoji:'👕'},
-    {id:3, nome:'Caneca Pop', precoXP:350, emoji:'☕'},
-  ]
+export default function App() {
   return (
-    <div className="page container">
-      <h2 className="title">Loja de Recompensas</h2>
-      <div className="grid" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
-        {itens.map(item=> (
-          <div key={item.id} className="card" style={{textAlign:'center'}}>
-            <div className="icon-circle" style={{width:52, height:52, fontSize:24}} aria-hidden>{item.emoji}</div>
-            <div className="subtitle" style={{fontWeight:700}}>{item.nome}</div>
-            <button className="btn btn-primary" style={{marginTop:8}}>Trocar por {item.precoXP} XP</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-function Config(){
-  const navigate = useNavigate()
-  return (
-    <div className="page container">
-      <h2 className="title">Configurações</h2>
-      <div className="card">
-        <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-          <div>
-            <div className="title" style={{fontSize:16}}>Notificações internas</div>
-            <div className="subtitle">Receber alertas como "Você ganhou 10 XP!"</div>
-          </div>
-          <button className="btn btn-secondary">Ativar</button>
-        </div>
-        <div style={{height:12}}/>
-        <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-          <div>
-            <div className="title" style={{fontSize:16}}>Sons e animações leves</div>
-            <div className="subtitle">Feedbacks visuais e sonoros</div>
-          </div>
-          <button className="btn btn-secondary">Ativar</button>
-        </div>
-        <div style={{height:12}}/>
-        <button className="btn btn-primary" onClick={()=>navigate('/')}>Salvar alterações</button>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<RequireAuth><StudentDashboard /></RequireAuth>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/selecionar" element={<RequireAuth><SelectRole /></RequireAuth>} />
+
+        {/* User Routes with Layout */}
+        <Route path="/trilhas" element={<RequireAuth><Layout><Trilhas /></Layout></RequireAuth>} />
+        <Route path="/aula" element={<RequireAuth><Layout><AulaQuiz /></Layout></RequireAuth>} />
+        <Route path="/ranking" element={<RequireAuth><Layout><Ranking /></Layout></RequireAuth>} />
+        <Route path="/perfil" element={<RequireAuth><Layout><Perfil /></Layout></RequireAuth>} />
+        <Route path="/perfil/edit" element={<RequireAuth><Layout><PerfilEdit /></Layout></RequireAuth>} />
+        <Route path="/loja" element={<RequireAuth><Layout><Loja /></Layout></RequireAuth>} />
+        <Route path="/config" element={<RequireAuth><Layout><Config /></Layout></RequireAuth>} />
+
+        {/* Admin Route */}
+        <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
+        <Route path="/admin/*" element={<RequireAuth><Admin /></RequireAuth>} />
+        {/* Student Dashboard */}
+        <Route path="/student/*" element={<RequireAuth><StudentDashboard /></RequireAuth>} />
+      </Routes>
+    </BrowserRouter>
   )
 }

@@ -20,9 +20,9 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [xpEarned, setXpEarned] = useState(0);
-  const [sessionXP, setSessionXP] = useState(0); // XP acumulado na sessão atual
-  const [userTotalXP, setUserTotalXP] = useState(0); // XP total do usuário
+  const [pointsEarned, setPointsEarned] = useState(0);
+  const [sessionPoints, setSessionPoints] = useState(0); // Pontos acumulados na sessão atual
+  const [userTotalPoints, setUserTotalPoints] = useState(0); // Pontos totais do usuário
   const [quizResults, setQuizResults] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,19 +33,19 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const xpAnim = useRef(new Animated.Value(0)).current;
+  const pointsAnim = useRef(new Animated.Value(0)).current;
   const confettiAnim = useRef(new Animated.Value(0)).current;
 
   const currentQuiz = quizzes[currentQuizIndex];
   const progress = ((currentQuizIndex + 1) / quizzes.length) * 100;
 
-  // Carregar XP total do usuário ao iniciar
+  // Carregar Pontos totais do usuário ao iniciar
   useEffect(() => {
-    loadUserTotalXP();
+    loadUserTotalPoints();
   }, [user]);
 
-  // Função para carregar XP total do usuário
-  const loadUserTotalXP = async () => {
+  // Função para carregar Pontos totais do usuário
+  const loadUserTotalPoints = async () => {
     if (!user?.id) return;
     
     try {
@@ -54,11 +54,14 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
       
       if (error) throw error;
       
-      if (data?.user?.xp_total) {
-        setUserTotalXP(data.user.xp_total);
+      // Aliasing xp_total to userTotalPoints
+      if (data?.user?.xp_total !== undefined) {
+        setUserTotalPoints(data.user.xp_total);
+      } else if (data?.user?.total_points !== undefined) {
+         setUserTotalPoints(data.user.total_points);
       }
     } catch (error) {
-      console.error('Erro ao carregar XP total do usuário:', error);
+      console.error('Erro ao carregar Pontos totais do usuário:', error);
     }
   };
 
@@ -123,13 +126,15 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
     try {
       // Verificar resposta localmente usando a estrutura antiga
       const isCorrect = selectedOption === currentQuiz.correct_answer;
-      const xp = isCorrect ? currentQuiz.xp_reward : 0;
+      // Use xp_reward if available, otherwise 0
+      const points = isCorrect ? (currentQuiz.xp_reward || currentQuiz.points_reward || 0) : 0;
 
       // Registrar tentativa no banco - tentativa simples primeiro
       let attemptData, attemptError;
       
       try {
          // Tentar inserção com selected_answer (estrutura real do banco)
+         // Note: keeping xp_earned column name for now if backend expects it, but we can alias if needed
          const result = await supabase
            .from('quiz_attempts')
            .insert({
@@ -137,7 +142,7 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
              quiz_id: currentQuiz.id,
              selected_answer: selectedOption, // Índice da opção selecionada (0-3)
              is_correct: isCorrect,
-             xp_earned: xp,
+             xp_earned: points, // Still mapping to xp_earned in DB for now
              attempt_number: 1
            })
            .select()
@@ -153,21 +158,25 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
 
       // Atualizar estados locais
       setIsCorrect(isCorrect);
-      setXpEarned(xp);
+      setPointsEarned(points);
       
-      // Acumular XP da sessão
-      if (xp > 0) {
-        setSessionXP(prev => prev + xp);
+      // Acumular Pontos da sessão
+      if (points > 0) {
+        setSessionPoints(prev => prev + points);
         
-        // Recarregar XP total do usuário do banco (sincronização)
+        // Recarregar Pontos totais do usuário do banco (sincronização)
         setTimeout(async () => {
           try {
             const { data, error } = await supabase.rpc('get_user_dashboard', { user_id: user.id });
-            if (!error && data?.user?.xp_total !== undefined) {
-              setUserTotalXP(data.user.xp_total);
+            if (!error) {
+                if (data?.user?.xp_total !== undefined) {
+                    setUserTotalPoints(data.user.xp_total);
+                } else if (data?.user?.total_points !== undefined) {
+                    setUserTotalPoints(data.user.total_points);
+                }
             }
           } catch (error) {
-            console.error('Erro ao sincronizar XP total:', error);
+            console.error('Erro ao sincronizar Pontos totais:', error);
           }
         }, 500); // Aguardar 500ms para o trigger processar
       }
@@ -178,7 +187,7 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
       setQuizResults(prev => [...prev, {
         quizId: currentQuiz.id,
         correct: isCorrect,
-        xpEarned: xp,
+        pointsEarned: points,
         selectedOption
       }]);
 
@@ -197,9 +206,9 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
         Vibration.vibrate(200); // Vibração de erro
       }
 
-      // Animação de XP
-      if (xp > 0) {
-        Animated.timing(xpAnim, {
+      // Animação de Pontos
+      if (points > 0) {
+        Animated.timing(pointsAnim, {
           toValue: 1,
           duration: 800,
           useNativeDriver: true,
@@ -208,7 +217,7 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
 
       // Callback para quiz individual
       if (onQuizComplete) {
-        onQuizComplete(currentQuiz.id, isCorrect, xp);
+        onQuizComplete(currentQuiz.id, isCorrect, points);
       }
 
     } catch (error) {
@@ -225,17 +234,17 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
       setCurrentQuizIndex(prev => prev + 1);
       setSelectedOption(null);
       setShowResult(false);
-      setXpEarned(0); // Reset apenas o XP da pergunta atual
+      setPointsEarned(0); // Reset apenas os Pontos da pergunta atual
       
       // Reset animações
       slideAnim.setValue(0);
-      xpAnim.setValue(0);
+      pointsAnim.setValue(0);
       confettiAnim.setValue(0);
       
     } else {
-      // Quiz completo - enviar XP total da sessão
+      // Quiz completo - enviar Pontos totais da sessão
       if (onComplete) {
-        onComplete(quizResults, sessionXP); // Usar sessionXP em vez de totalXP
+        onComplete(quizResults, sessionPoints); // Usar sessionPoints em vez de totalPoints
       }
     }
   };
@@ -350,12 +359,12 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
 
       {/* Feedback de Resultado */}
       {showResult && (
-        <Animated.View style={[styles.resultContainer, { opacity: xpAnim }]}>
+        <Animated.View style={[styles.resultContainer, { opacity: pointsAnim }]}>
           <Text style={[styles.resultText, isCorrect ? styles.correctText : styles.incorrectText]}>
             {isCorrect ? '🎉 Correto!' : '❌ Incorreto'}
           </Text>
-          {xpEarned > 0 && (
-            <Text style={styles.xpText}>+{xpEarned} XP</Text>
+          {pointsEarned > 0 && (
+            <Text style={styles.pointsText}>+{pointsEarned} Pontos</Text>
           )}
         </Animated.View>
       )}
@@ -387,14 +396,14 @@ const QuizGame = ({ quizzes, onComplete, onQuizComplete, user }) => {
         )}
       </View>
 
-      {/* XP Total e Sessão */}
-      <View style={styles.xpInfoContainer}>
-        <View style={styles.totalXPContainer}>
-          <Text style={styles.totalXPText}>XP Total: {userTotalXP}</Text>
+      {/* Pontos Total e Sessão */}
+      <View style={styles.pointsInfoContainer}>
+        <View style={styles.totalPointsContainer}>
+          <Text style={styles.totalPointsText}>Total: {userTotalPoints} Pontos</Text>
         </View>
-        {sessionXP > 0 && (
-          <View style={styles.sessionXPContainer}>
-            <Text style={styles.sessionXPText}>XP desta sessão: +{sessionXP}</Text>
+        {sessionPoints > 0 && (
+          <View style={styles.sessionPointsContainer}>
+            <Text style={styles.sessionPointsText}>Nesta sessão: +{sessionPoints}</Text>
           </View>
         )}
       </View>
@@ -508,7 +517,7 @@ const styles = StyleSheet.create({
   incorrectText: {
     color: '#DC3545',
   },
-  xpText: {
+  pointsText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFD700',
@@ -543,31 +552,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  xpInfoContainer: {
+  pointsInfoContainer: {
     position: 'absolute',
     top: 60,
     right: 20,
     alignItems: 'flex-end',
   },
-  totalXPContainer: {
+  totalPointsContainer: {
     backgroundColor: '#FFD700',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     marginBottom: 8,
   },
-  totalXPText: {
+  totalPointsText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
   },
-  sessionXPContainer: {
+  sessionPointsContainer: {
     backgroundColor: '#28A745',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 15,
   },
-  sessionXPText: {
+  sessionPointsText: {
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 12,

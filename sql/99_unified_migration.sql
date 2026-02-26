@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   content TEXT,
   video_url TEXT,
   lesson_type VARCHAR(50) DEFAULT 'text' CHECK (lesson_type IN ('video','text','interactive','quiz')),
-  duration_minutes INTEGER DEFAULT 10,
+  duration INTEGER DEFAULT 10,
   xp_reward INTEGER NOT NULL DEFAULT 20,
   order_index INTEGER DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -244,6 +244,10 @@ CREATE TABLE IF NOT EXISTS lessons (
 
 DO $$ BEGIN
   ALTER TABLE lessons ADD COLUMN IF NOT EXISTS lesson_type VARCHAR(50) DEFAULT 'text';
+EXCEPTION WHEN others THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE lessons ADD COLUMN IF NOT EXISTS duration INTEGER DEFAULT 10;
 EXCEPTION WHEN others THEN NULL;
 END $$;
 
@@ -367,6 +371,11 @@ CREATE TABLE IF NOT EXISTS user_progress (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+DO $$ BEGIN
+  ALTER TABLE user_progress ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
+EXCEPTION WHEN others THEN NULL;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_user_progress_user ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_progress_lesson ON user_progress(user_id, lesson_id);
@@ -851,7 +860,7 @@ BEGIN
   PERFORM update_user_stats(user_id_param);
 
   -- Registrar atividade no streak
-  PERFORM record_daily_activity(user_id_param, 'lesson', v_xp, COALESCE(v_lesson.duration_minutes, 10));
+  PERFORM record_daily_activity(user_id_param, 'lesson', v_xp, COALESCE(v_lesson.duration, 10));
 
   RETURN json_build_object(
     'success', true,
@@ -972,7 +981,7 @@ BEGIN
   -- Próximas aulas (não completadas, desbloqueadas)
   SELECT json_agg(row_to_json(t)) INTO v_next_lessons
   FROM (
-    SELECT l.id, l.title, l.xp_reward, l.duration_minutes, tr.title as trail_title, tr.icon
+    SELECT l.id, l.title, l.xp_reward, l.duration, tr.title as trail_title, tr.icon_url
     FROM lessons l
     JOIN trails tr ON tr.id = l.trail_id
     WHERE l.is_active = true

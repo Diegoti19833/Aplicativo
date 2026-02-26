@@ -24,7 +24,7 @@ export const useUserData = () => {
 
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select('*, total_pontos:total_xp, current_assiduidade:current_streak')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -55,7 +55,7 @@ export const useUserData = () => {
         const { data: createdUser, error: createError } = await supabase
           .from('users')
           .insert(newUserData)
-          .select()
+          .select('*, total_pontos:total_xp, current_assiduidade:current_streak')
           .single();
 
         if (createError) throw createError;

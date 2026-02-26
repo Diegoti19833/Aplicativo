@@ -171,7 +171,7 @@ const InteractiveQuiz = ({ quiz, onAnswerSubmit, onNext, isLastQuiz }) => {
           </Text>
           {isCorrect && (
             <Text style={styles.xpReward}>
-              +{quiz.xp_reward || 10} XP
+              +{quiz.xp_reward || 10} Pontos
             </Text>
           )}
         </View>

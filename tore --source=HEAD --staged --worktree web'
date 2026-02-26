@@ -1,0 +1,46 @@
+warning: in the working copy of 'mobile/App.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mobile/components/InteractiveQuiz.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mobile/components/QuizGame.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mobile/hooks/useDashboard.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mobile/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'mobile/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sql/00_execute_all_tables.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sql/05_user_progress_table.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sql/99_unified_migration.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sql/99b_rls_policies.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/App.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/App.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/components/admin/AdminConfig.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/components/admin/AdminLoja.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/components/admin/AdminMissoes.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/components/admin/AdminRelatorios.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/components/admin/AdminTrilhas.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/components/admin/AdminUsers.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/components/trails/TrailsSection.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/src/index.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/tailwind.config.js', LF will be replaced by CRLF the next time Git touches it
+mobile/App.js
+mobile/components/InteractiveQuiz.js
+mobile/components/QuizGame.js
+mobile/hooks/useDashboard.js
+mobile/hooks/useUserData.js
+mobile/package-lock.json
+mobile/package.json
+sql/00_execute_all_tables.sql
+sql/05_user_progress_table.sql
+sql/99_unified_migration.sql
+sql/99b_rls_policies.sql
+web/src/App.css
+web/src/App.jsx
+web/src/components/admin/AdminConfig.jsx
+web/src/components/admin/AdminDashboard.jsx
+web/src/components/admin/AdminLoja.jsx
+web/src/components/admin/AdminMissoes.jsx
+web/src/components/admin/AdminRanking.jsx
+web/src/components/admin/AdminRelatorios.jsx
+web/src/components/admin/AdminTrilhas.jsx
+web/src/components/admin/AdminUsers.jsx
+web/src/components/trails/TrailsSection.jsx
+web/src/index.css
+web/src/services/adminDb.js
+web/tailwind.config.js

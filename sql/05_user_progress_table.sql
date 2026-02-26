@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
     progress_type VARCHAR(50) NOT NULL CHECK (progress_type IN ('trail_started', 'lesson_completed', 'quiz_completed')),
     completion_percentage INTEGER DEFAULT 0 CHECK (completion_percentage BETWEEN 0 AND 100),
     xp_earned INTEGER DEFAULT 0,
+    is_completed BOOLEAN DEFAULT false,
     time_spent INTEGER DEFAULT 0, -- em segundos
     completed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -33,6 +34,11 @@ CREATE TRIGGER update_user_progress_updated_at
     BEFORE UPDATE ON user_progress
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+DO $$ BEGIN
+    ALTER TABLE user_progress ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 -- Função para atualizar XP do usuário quando progresso é criado/atualizado
 CREATE OR REPLACE FUNCTION update_user_xp_on_progress()

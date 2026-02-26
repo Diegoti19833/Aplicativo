@@ -681,7 +681,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Atendimento ao Cliente - Funcionário';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_funcionario_atendimento, 'Fundamentos do Atendimento', 'Aprenda os princípios básicos do atendimento ao cliente e a importância da primeira impressão.', 'Nesta lição você aprenderá sobre os fundamentos do atendimento ao cliente, incluindo a importância do primeiro contato, postura profissional e criação de um ambiente acolhedor.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 25, 50, 1, 'video'),
     (trail_funcionario_atendimento, 'Comunicação Efetiva', 'Desenvolva habilidades de comunicação clara, escuta ativa e linguagem corporal adequada.', 'Explore técnicas de comunicação efetiva, incluindo escuta ativa, linguagem verbal e não-verbal, e como adaptar sua comunicação para diferentes tipos de clientes.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 30, 60, 2, 'video'),
     (trail_funcionario_atendimento, 'Resolução de Problemas Básicos', 'Aprenda a identificar, analisar e resolver problemas comuns no atendimento ao cliente.', 'Desenvolva habilidades para identificar problemas, fazer perguntas adequadas e encontrar soluções práticas para situações do dia a dia.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 35, 70, 3, 'video'),
@@ -697,7 +697,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Procedimentos Operacionais Básicos';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_funcionario_operacional, 'Normas de Segurança no Trabalho', 'Conheça as principais normas de segurança e como aplicá-las no ambiente de trabalho.', 'Aprenda sobre equipamentos de proteção individual, procedimentos de segurança e como prevenir acidentes no trabalho.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 30, 60, 1, 'video'),
     (trail_funcionario_operacional, 'Organização do Ambiente de Trabalho', 'Aprenda técnicas de organização e metodologia 5S para manter o ambiente produtivo.', 'Descubra como organizar seu espaço de trabalho, implementar a metodologia 5S e manter a produtividade.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 25, 50, 2, 'video'),
     (trail_funcionario_operacional, 'Protocolos de Emergência', 'Conheça os procedimentos em caso de emergências e situações de risco.', 'Aprenda sobre planos de evacuação, primeiros socorros básicos e como agir em diferentes tipos de emergência.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 35, 70, 3, 'video');
@@ -712,7 +712,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Liderança e Gestão de Equipes';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_gerente_lideranca, 'Estilos de Liderança', 'Conheça diferentes estilos de liderança e quando aplicar cada um.', 'Explore os principais estilos de liderança: autocrático, democrático, delegativo e situacional, e aprenda quando usar cada abordagem.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 45, 90, 1, 'video'),
     (trail_gerente_lideranca, 'Motivação e Engajamento', 'Aprenda técnicas para motivar sua equipe e aumentar o engajamento.', 'Descubra teorias de motivação, como identificar o que motiva cada pessoa e estratégias para manter a equipe engajada.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 50, 100, 2, 'video'),
     (trail_gerente_lideranca, 'Feedback e Desenvolvimento', 'Domine a arte de dar feedback construtivo e desenvolver sua equipe.', 'Aprenda técnicas de feedback efetivo, como conduzir conversas de desenvolvimento e criar planos de crescimento.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 40, 80, 3, 'video');
@@ -727,7 +727,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Gestão Financeira e KPIs';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_gerente_financeiro, 'Indicadores de Performance (KPIs)', 'Aprenda a definir, medir e interpretar os principais KPIs do negócio.', 'Conheça os principais indicadores de performance, como defini-los corretamente e como usar os dados para tomar decisões.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 40, 80, 1, 'video'),
     (trail_gerente_financeiro, 'Controle de Custos e Orçamento', 'Domine técnicas de controle de custos e planejamento orçamentário.', 'Aprenda a elaborar orçamentos, controlar custos operacionais e identificar oportunidades de economia.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 45, 90, 2, 'video'),
     (trail_gerente_financeiro, 'Análise de Resultados', 'Aprenda a analisar demonstrativos financeiros e relatórios de performance.', 'Desenvolva habilidades para interpretar relatórios financeiros, identificar tendências e propor ações corretivas.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 50, 100, 3, 'video');
@@ -742,7 +742,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Operações de Caixa e Pagamentos';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_caixa_operacoes, 'Abertura e Fechamento de Caixa', 'Aprenda os procedimentos corretos para abertura e fechamento do caixa.', 'Conheça todos os passos para abrir e fechar o caixa corretamente, incluindo conferência de valores e documentação.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 30, 60, 1, 'video'),
     (trail_caixa_operacoes, 'Formas de Pagamento', 'Domine todas as formas de pagamento: dinheiro, cartão, PIX e outros.', 'Aprenda a processar diferentes formas de pagamento, incluindo procedimentos de segurança para cada modalidade.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 35, 70, 2, 'video'),
     (trail_caixa_operacoes, 'Segurança no Caixa', 'Conheça os procedimentos de segurança para operações de caixa.', 'Aprenda sobre identificação de notas falsas, procedimentos anti-fraude e como agir em situações suspeitas.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 40, 80, 3, 'video');
@@ -757,7 +757,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Atendimento Rápido e Eficiente no Caixa';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_caixa_atendimento, 'Técnicas de Agilidade', 'Aprenda técnicas para acelerar o atendimento sem perder qualidade.', 'Descubra métodos para otimizar o tempo de atendimento, organizar o espaço de trabalho e manter a eficiência.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 25, 50, 1, 'video'),
     (trail_caixa_atendimento, 'Gestão de Filas', 'Aprenda a gerenciar filas e reduzir o tempo de espera dos clientes.', 'Conheça estratégias para organizar filas, priorizar atendimentos e manter os clientes informados sobre o tempo de espera.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 30, 60, 2, 'video'),
     (trail_caixa_atendimento, 'Multitarefa no Caixa', 'Desenvolva habilidades para realizar múltiplas tarefas de forma eficiente.', 'Aprenda a equilibrar velocidade e precisão, gerenciar múltiplas demandas e manter a qualidade do atendimento.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 35, 70, 3, 'video');
@@ -772,7 +772,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Segurança e Compliance Empresarial';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_seguranca, 'LGPD e Proteção de Dados', 'Conheça a Lei Geral de Proteção de Dados e como aplicá-la no trabalho.', 'Aprenda sobre a LGPD, direitos dos titulares de dados, procedimentos de proteção e como lidar com dados pessoais.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 45, 90, 1, 'video'),
     (trail_seguranca, 'Compliance e Ética', 'Entenda os princípios de compliance e ética empresarial.', 'Explore conceitos de compliance, código de ética, conflitos de interesse e como tomar decisões éticas.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 40, 80, 2, 'video');
 END $$;
@@ -786,7 +786,7 @@ BEGIN
     FROM trails 
     WHERE title = 'Cultura e Valores Organizacionais';
     
-    INSERT INTO lessons (trail_id, title, description, content, video_url, duration_minutes, xp_reward, order_index, lesson_type) VALUES
+    INSERT INTO lessons (trail_id, title, description, content, video_url, duration, xp_reward, order_index, lesson_type) VALUES
     (trail_cultura, 'Missão, Visão e Valores', 'Conheça a missão, visão e valores da empresa e como vivenciá-los.', 'Aprenda sobre a identidade da empresa, seus propósitos e como incorporar os valores no dia a dia de trabalho.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 20, 40, 1, 'video'),
     (trail_cultura, 'Comportamentos e Atitudes', 'Desenvolva comportamentos alinhados com a cultura organizacional.', 'Descubra como demonstrar os valores da empresa através de suas ações, atitudes e relacionamentos no trabalho.', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 25, 50, 2, 'video');
 END $$;

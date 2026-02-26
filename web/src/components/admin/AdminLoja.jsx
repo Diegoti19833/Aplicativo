@@ -1,18 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { ShoppingBag, Plus, Edit3, Trash2, Package, ToggleLeft, ToggleRight } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { Gift, Plus, Edit3, Trash2, Package, ToggleLeft, ToggleRight, AlertTriangle, TrendingUp, Star, Search, Filter, Award, ShoppingBag, X, ImagePlus, Upload, Trash } from 'lucide-react';
 import { AdminDb } from '../../services/adminDb';
+import { useToast } from './ToastContext';
 
 export default function AdminLoja() {
+  const toast = useToast();
+
+  function ShopStatsCard({ title, value, icon, color }) {
+    const gradients = {
+      blue: 'from-blue-500 to-indigo-600',
+      green: 'from-emerald-500 to-teal-600',
+      purple: 'from-violet-500 to-purple-600',
+      orange: 'from-orange-400 to-pink-500',
+    };
+    return (
+      <div className="glass-panel p-5 flex items-center justify-between relative overflow-hidden group hover:scale-[1.02] transition-transform">
+        <div className={`absolute right-0 top-0 p-3 opacity-10`}>{React.cloneElement(icon, { size: 64 })}</div>
+        <div>
+          <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
+          <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+        </div>
+        <div className={`p-3 rounded-xl bg-gradient-to-br ${gradients[color] || gradients.blue} text-white shadow-lg shadow-blue-500/20`}>
+          {React.cloneElement(icon, { size: 20 })}
+        </div>
+      </div>
+    );
+  }
   const [items, setItems] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [activeView, setActiveView] = useState('items');
-  const [form, setForm] = useState({ name: '', description: '', icon: '🎁', itemType: 'cosmetic', price: 50, rarity: 'common', stockQuantity: '', purchaseLimit: 1 });
+  const [activeView, setActiveView] = useState('items'); // items, purchases
+  const [searchTerm, setSearchTerm] = useState('');
+  const [form, setForm] = useState({ name: '', description: '', icon: '🎁', image_url: '', itemType: 'fisico', price: 50, rarity: 'padrao', stockQuantity: '', purchaseLimit: 1 });
+  const fileInputRef = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
+
+  const MOCK_ITEMS = [
+    { id: '1', name: 'Caneca PetClass', description: 'Caneca exclusiva da plataforma', icon: '☕', image_url: '', item_type: 'fisico', price: 150, rarity: 'raro', stock_quantity: 20, is_active: true, purchase_count: 45 },
+    { id: '2', name: 'Dia de Folga', description: 'Um dia de folga remunerado', icon: '🏖️', image_url: '', item_type: 'beneficio', price: 500, rarity: 'epico', stock_quantity: 5, is_active: true, purchase_count: 12 },
+    { id: '3', name: 'Vale Presente R$50', description: 'Vale presente para usar na loja parceira', icon: '🎁', image_url: '', item_type: 'voucher', price: 300, rarity: 'padrao', stock_quantity: 10, is_active: true, purchase_count: 28 },
+    { id: '4', name: 'Camiseta GamePop', description: 'Camiseta oficial da empresa', icon: '👕', image_url: '', item_type: 'fisico', price: 200, rarity: 'padrao', stock_quantity: 15, is_active: true, purchase_count: 33 },
+  ];
 
   const loadData = async () => {
     try {
@@ -21,13 +52,60 @@ export default function AdminLoja() {
         AdminDb.storeItems.list().catch(() => []),
         AdminDb.purchases.list().catch(() => [])
       ]);
-      setItems(itemsData);
+      setItems(itemsData && itemsData.length > 0 ? itemsData : MOCK_ITEMS);
       setPurchases(purchasesData);
     } catch (e) {
       console.error('Erro:', e);
+      setItems(MOCK_ITEMS);
     } finally {
       setLoading(false);
     }
+  };
+
+  const stats = useMemo(() => {
+    const totalRevenue = purchases.reduce((acc, p) => acc + (p.total_price || 0), 0);
+    const totalSales = purchases.length;
+    const lowStockItems = items.filter(i => i.stock_quantity !== null && i.stock_quantity < 10);
+    const itemSales = {};
+    purchases.forEach(p => {
+      const itemId = p.item_id || (p.item && p.item.id);
+      if (itemId) itemSales[itemId] = (itemSales[itemId] || 0) + (p.quantity || 1);
+    });
+    const topItems = Object.entries(itemSales)
+      .map(([id, count]) => {
+        const item = items.find(i => i.id === id) || { name: 'Item Desconhecido' };
+        return { name: item.name, count, id };
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    return { totalRevenue, totalSales, lowStockItems, topItems };
+  }, [items, purchases]);
+
+  const filteredItems = items.filter(i =>
+    (i.name && i.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (i.description && i.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const handleImageFile = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.warning('Selecione um arquivo de imagem (PNG, JPG, etc.)');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.warning('Imagem muito grande. Máximo: 2MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => setForm(f => ({ ...f, image_url: ev.target.result }));
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleImageFile(file);
   };
 
   const handleCreate = async (e) => {
@@ -36,7 +114,8 @@ export default function AdminLoja() {
       await AdminDb.storeItems.create({
         name: form.name,
         description: form.description,
-        icon: form.icon,
+        icon: form.icon || '🎁',
+        image_url: form.image_url || null,
         itemType: form.itemType,
         price: parseInt(form.price),
         rarity: form.rarity,
@@ -44,172 +123,382 @@ export default function AdminLoja() {
         purchaseLimit: parseInt(form.purchaseLimit) || 1,
       });
       setShowForm(false);
-      setForm({ name: '', description: '', icon: '🎁', itemType: 'cosmetic', price: 50, rarity: 'common', stockQuantity: '', purchaseLimit: 1 });
+      resetForm();
       loadData();
+      toast.success('Prêmio criado com sucesso!');
     } catch (e) {
-      alert('Erro ao criar item: ' + e.message);
+      toast.error('Erro ao criar item', e?.message);
     }
   };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await AdminDb.storeItems.update({
+        id: form.id,
+        name: form.name,
+        description: form.description,
+        icon: form.icon || '🎁',
+        image_url: form.image_url || null,
+        price: parseInt(form.price),
+        stockQuantity: form.stockQuantity ? parseInt(form.stockQuantity) : null,
+        isAvailable: form.isAvailable,
+        rarity: form.rarity
+      });
+      setShowForm(false);
+      resetForm();
+      loadData();
+      toast.success('Prêmio atualizado!');
+    } catch (e) {
+      toast.error('Erro ao atualizar item', e?.message);
+    }
+  };
+
+  const resetForm = () => setForm({ name: '', description: '', icon: '🎁', image_url: '', itemType: 'fisico', price: 50, rarity: 'padrao', stockQuantity: '', purchaseLimit: 1 });
 
   const toggleAvailable = async (item) => {
     try {
       await AdminDb.storeItems.setAvailable({ id: item.id, isAvailable: !item.is_available });
       loadData();
     } catch (e) {
-      alert('Erro: ' + e.message);
+      toast.error('Erro ao alterar status', e?.message);
     }
   };
 
   const removeItem = async (item) => {
-    if (!confirm(`Remover "${item.name || item.title}"?`)) return;
+    if (!confirm(`Remover "${item.name || item.title}" permanentemente?`)) return;
     try {
       await AdminDb.storeItems.remove({ id: item.id });
       loadData();
+      toast.success('Prêmio removido!');
     } catch (e) {
-      alert('Erro: ' + e.message);
+      toast.error('Erro ao remover', e?.message);
     }
   };
 
-  const rarityColors = {
-    common: { bg: '#F3F4F6', color: '#6B7280' },
-    rare: { bg: '#DBEAFE', color: '#2563EB' },
-    epic: { bg: '#E9D5FF', color: '#7C3AED' },
-    legendary: { bg: '#FEF3C7', color: '#D97706' },
+  const openEdit = (item) => {
+    setForm({
+      id: item.id,
+      name: item.name || item.title,
+      description: item.description,
+      icon: item.icon,
+      image_url: item.image_url || '',
+      itemType: item.item_type,
+      price: item.price,
+      rarity: item.rarity,
+      stockQuantity: item.stock_quantity,
+      purchaseLimit: item.purchase_limit,
+      isAvailable: item.is_available
+    });
+    setShowForm(true);
   };
 
-  if (loading) {
-    return <div style={{ padding: 32, textAlign: 'center', color: '#6B7280' }}>Carregando loja...</div>;
-  }
+  // Helper to render item image or fallback emoji
+  const ItemImage = ({ item, size = 'md' }) => {
+    const sizeClasses = size === 'sm' ? 'w-10 h-10' : 'w-16 h-16';
+    const imgUrl = item.image_url || '';
+    const isDataUrl = imgUrl.startsWith('data:image');
+    const isUrl = imgUrl.startsWith('http') || imgUrl.startsWith('/');
+
+    if (isDataUrl || isUrl) {
+      return (
+        <div className={`${sizeClasses} rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-inner flex-shrink-0`}>
+          <img src={imgUrl} alt={item.name} className="w-full h-full object-cover" />
+        </div>
+      );
+    }
+    return (
+      <div className={`${sizeClasses} rounded-2xl bg-gray-50 flex items-center justify-center ${size === 'sm' ? 'text-xl' : 'text-3xl'} shadow-inner border border-gray-100 flex-shrink-0`}>
+        {item.icon || '🎁'}
+      </div>
+    );
+  };
+
+  const getCategoryColor = (rarity) => {
+    const r = rarity?.toLowerCase();
+    if (r === 'lendario') return 'bg-purple-50 text-purple-700 border-purple-100 ring-purple-500/20';
+    if (r === 'epico') return 'bg-blue-50 text-blue-700 border-blue-100 ring-blue-500/20';
+    if (r === 'raro') return 'bg-amber-50 text-amber-700 border-amber-100 ring-amber-500/20';
+    return 'bg-gray-50 text-gray-600 border-gray-100 ring-gray-500/20';
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-96">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+    </div>
+  );
 
   return (
-    <div style={{ padding: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 4 }}>
-            <ShoppingBag size={24} style={{ verticalAlign: 'middle', marginRight: 8 }} />
-            Loja & Premios
-          </h1>
-          <p style={{ color: '#6B7280' }}>{items.length} itens cadastrados | {purchases.length} compras realizadas</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={() => setActiveView('items')}
-            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb', background: activeView === 'items' ? '#0047AB' : '#fff', color: activeView === 'items' ? '#fff' : '#374151', cursor: 'pointer', fontWeight: 500 }}
-          >Itens</button>
-          <button
-            onClick={() => setActiveView('purchases')}
-            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e5e7eb', background: activeView === 'purchases' ? '#0047AB' : '#fff', color: activeView === 'purchases' ? '#fff' : '#374151', cursor: 'pointer', fontWeight: 500 }}
-          >Historico de Compras</button>
-          <button onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#059669', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
-            <Plus size={16} /> Novo Item
-          </button>
-        </div>
+    <div className="p-8 space-y-6 animate-fade-in relative z-10">
+      {/* Mini Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ShopStatsCard title="Receita Total" value={`${stats.totalRevenue} moedas`} icon={<TrendingUp />} color="green" />
+        <ShopStatsCard title="Vendas Totais" value={stats.totalSales} icon={<ShoppingBag />} color="blue" />
+        <ShopStatsCard title="Itens Baixo Estoque" value={stats.lowStockItems.length} icon={<AlertTriangle />} color="orange" />
+        <ShopStatsCard title="Top Item" value={stats.topItems[0]?.name || '-'} icon={<Star />} color="purple" />
       </div>
 
-      {/* Create form */}
-      {showForm && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Novo Item da Loja</h3>
-          <form onSubmit={handleCreate} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Nome do item" required style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Descricao" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <input value={form.icon} onChange={e => setForm({...form, icon: e.target.value})} placeholder="Icone (emoji)" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <select value={form.itemType} onChange={e => setForm({...form, itemType: e.target.value})} style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }}>
-              <option value="avatar">Avatar</option>
-              <option value="theme">Tema</option>
-              <option value="boost">Boost</option>
-              <option value="decoration">Decoracao</option>
-              <option value="special">Especial</option>
-              <option value="cosmetic">Cosmetico</option>
-            </select>
-            <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} placeholder="Preco (coins)" min="1" required style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <select value={form.rarity} onChange={e => setForm({...form, rarity: e.target.value})} style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }}>
-              <option value="common">Comum</option>
-              <option value="rare">Raro</option>
-              <option value="epic">Epico</option>
-              <option value="legendary">Legendario</option>
-            </select>
-            <input type="number" value={form.stockQuantity} onChange={e => setForm({...form, stockQuantity: e.target.value})} placeholder="Estoque (vazio = ilimitado)" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <input type="number" value={form.purchaseLimit} onChange={e => setForm({...form, purchaseLimit: e.target.value})} placeholder="Limite por usuario" min="1" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8 }}>
-              <button type="submit" style={{ background: '#059669', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Criar Item</button>
-              <button type="button" onClick={() => setShowForm(false)} style={{ background: '#f3f4f6', color: '#374151', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer' }}>Cancelar</button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 glass-panel p-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <Gift className="text-orange-600" /> Catálogo de Prêmios
+            </h2>
+            <div className="flex gap-2 w-full md:w-auto">
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Buscar itens..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                />
+              </div>
+              {activeView === 'items' && (
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setShowForm(true);
+                  }}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 font-medium shadow-lg shadow-orange-500/30"
+                >
+                  <Plus size={18} /> Novo Item
+                </button>
+              )}
             </div>
-          </form>
-        </div>
-      )}
+          </div>
 
-      {activeView === 'items' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-          {items.map(item => {
-            const rarity = rarityColors[item.rarity] || rarityColors.common;
-            return (
-              <div key={item.id} className="card" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                  <div style={{ fontSize: 32 }}>{item.icon || '🎁'}</div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={() => toggleAvailable(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                      {item.is_available ? <ToggleRight size={20} color="#059669" /> : <ToggleLeft size={20} color="#DC2626" />}
-                    </button>
-                    <button onClick={() => removeItem(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                      <Trash2 size={16} color="#DC2626" />
+          {/* View Toggle */}
+          <div className="flex gap-2 mb-6 border-b border-gray-100 pb-1">
+            <button onClick={() => setActiveView('items')} className={`px-6 py-2 rounded-t-lg font-medium transition-all ${activeView === 'items' ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50/50' : 'text-gray-500 hover:text-gray-800'}`}>Itens da Loja</button>
+            <button onClick={() => setActiveView('purchases')} className={`px-6 py-2 rounded-t-lg font-medium transition-all ${activeView === 'purchases' ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50/50' : 'text-gray-500 hover:text-gray-800'}`}>Histórico de Vendas</button>
+          </div>
+
+          {activeView === 'items' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {filteredItems.map(item => (
+                <div key={item.id} className={`group relative bg-white rounded-2xl p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${!item.is_available ? 'border-gray-100 bg-gray-50/50 grayscale' : 'border-gray-200 shadow-sm'}`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-4">
+                      <ItemImage item={item} />
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-lg">{item.name || item.title}</h4>
+                        <div className="flex gap-2 mt-1">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border ${getCategoryColor(item.rarity)}`}>
+                            {item.rarity?.toUpperCase()}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-brand/10 text-brand border border-brand/20">
+                            {item.price} PTS
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(item)} className="p-2 text-gray-400 hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"><Edit3 size={16} /></button>
+                      <button onClick={() => removeItem(item)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-500 text-sm mb-4 line-clamp-2 h-10">{item.description}</p>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      {item.stock_quantity !== null && (
+                        <span className={`text-xs font-semibold ${item.stock_quantity < 10 ? 'text-red-500' : 'text-gray-500'}`}>
+                          {item.stock_quantity} em estoque
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={() => toggleAvailable(item)} className={`transition-colors ${item.is_available ? 'text-green-500' : 'text-gray-300'}`}>
+                      {item.is_available ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
                     </button>
                   </div>
                 </div>
-                <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{item.name || item.title}</div>
-                <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>{item.description}</div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#FEF3C7', color: '#D97706', fontWeight: 600 }}>{item.price} coins</span>
-                  <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: rarity.bg, color: rarity.color, fontWeight: 600 }}>{item.rarity}</span>
-                  {item.stock_quantity != null && (
-                    <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#F3F4F6', color: '#374151' }}>Estoque: {item.stock_quantity}</span>
-                  )}
-                  <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: item.is_available ? '#D1FAE5' : '#FEE2E2', color: item.is_available ? '#059669' : '#DC2626' }}>
-                    {item.is_available ? 'Disponivel' : 'Indisponivel'}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-          {items.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40, color: '#9CA3AF' }}>Nenhum item na loja ainda</div>
-          )}
-        </div>
-      ) : (
-        <div className="card" style={{ overflow: 'auto' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Historico de Compras</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #f3f4f6' }}>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, color: '#6B7280' }}>DATA</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, color: '#6B7280' }}>USUARIO</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, color: '#6B7280' }}>ITEM</th>
-                <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280' }}>QTD</th>
-                <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, color: '#6B7280' }}>TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {purchases.map(p => (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f9fafb' }}>
-                  <td style={{ padding: '12px 8px', fontSize: 13 }}>{new Date(p.purchase_date).toLocaleDateString('pt-BR')}</td>
-                  <td style={{ padding: '12px 8px' }}>
-                    <div style={{ fontWeight: 500 }}>{p.user?.name || '-'}</div>
-                    <div style={{ fontSize: 12, color: '#9CA3AF' }}>{p.user?.email || '-'}</div>
-                  </td>
-                  <td style={{ padding: '12px 8px' }}>
-                    <span>{p.item?.icon} {p.item?.name || p.item?.title || '-'}</span>
-                  </td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right' }}>{p.quantity}</td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 600 }}>{p.total_price} coins</td>
-                </tr>
               ))}
-            </tbody>
-          </table>
-          {purchases.length === 0 && (
-            <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>Nenhuma compra registrada</div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50/50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Item</th>
+                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Usuário</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Data</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {purchases.map(p => (
+                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {p.item ? <ItemImage item={p.item} size="sm" /> : <span className="text-2xl">🎁</span>}
+                          <span className="font-semibold text-gray-900">{p.item?.name || 'Item Removido'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">{p.user?.name}</div>
+                        <div className="text-xs text-gray-500">{p.user?.email}</div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="font-bold text-brand">{p.total_price} pts</span>
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm text-gray-500">
+                        {new Date(p.purchase_date).toLocaleDateString('pt-BR')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      )}
-    </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          <div className="glass-panel p-6">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center">
+              <Award size={20} className="mr-2 text-yellow-500" /> Mais Resgatados
+            </h3>
+            <div className="space-y-3">
+              {stats.topItems.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}>{idx + 1}</div>
+                    <span className="font-medium text-gray-700 text-sm truncate max-w-[120px]">{item.name}</span>
+                  </div>
+                  <span className="text-xs font-bold text-gray-900">{item.count} un.</span>
+                </div>
+              ))}
+              {stats.topItems.length === 0 && <p className="text-gray-400 text-center text-sm py-4">Sem dados ainda</p>}
+            </div>
+          </div>
+
+          {stats.lowStockItems.length > 0 && (
+            <div className="bg-red-50 p-6 rounded-2xl border border-red-100">
+              <h3 className="font-bold text-red-900 mb-4 flex items-center">
+                <AlertTriangle size={20} className="mr-2" /> Estoque Baixo
+              </h3>
+              <div className="space-y-2">
+                {stats.lowStockItems.slice(0, 5).map(item => (
+                  <div key={item.id} className="flex justify-between items-center text-sm">
+                    <span className="text-red-700 font-medium">{item.name}</span>
+                    <span className="bg-white/50 px-2 py-0.5 rounded text-xs font-bold text-red-600">{item.stock_quantity} un.</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {
+        showForm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in transform transition-all">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 className="text-xl font-bold text-gray-900">{form.id ? 'Editar Prêmio' : 'Novo Prêmio'}</h3>
+                <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 transition-colors bg-white rounded-full p-1 hover:bg-gray-100">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={form.id ? handleUpdate : handleCreate} className="p-6 space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nome do Prêmio</label>
+                  <input required className="input w-full" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: Kit Boas Vindas" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Descrição</label>
+                  <textarea className="input w-full resize-none" rows="3" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Detalhes do prêmio..." />
+                </div>
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Imagem do Prêmio</label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleImageFile(e.target.files?.[0])}
+                  />
+                  {form.image_url ? (
+                    <div className="relative group">
+                      <div className="w-full h-40 rounded-xl overflow-hidden border-2 border-dashed border-blue-200 bg-blue-50/30">
+                        <img src={form.image_url} alt="Preview" className="w-full h-full object-contain" />
+                      </div>
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button type="button" onClick={() => fileInputRef.current?.click()}
+                          className="p-1.5 bg-white rounded-lg shadow-md text-blue-600 hover:bg-blue-50 transition-colors border border-gray-200">
+                          <Upload size={14} />
+                        </button>
+                        <button type="button" onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+                          className="p-1.5 bg-white rounded-lg shadow-md text-red-500 hover:bg-red-50 transition-colors border border-gray-200">
+                          <Trash size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={handleDrop}
+                      className={`w-full h-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all
+                        ${dragOver
+                          ? 'border-blue-500 bg-blue-50 scale-[1.02]'
+                          : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50/50'
+                        }`}
+                    >
+                      <ImagePlus size={32} className={`mb-2 ${dragOver ? 'text-blue-500' : 'text-gray-400'}`} />
+                      <p className="text-sm font-medium text-gray-600">Clique ou arraste uma imagem</p>
+                      <p className="text-xs text-gray-400 mt-1">PNG, JPG • Máx 2MB</p>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Valor (Pontos)</label>
+                    <div className="relative">
+                      <input type="number" required min="1" className="input w-full pl-8" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">PTS</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Estoque</label>
+                    <input type="number" className="input w-full" placeholder="Ilimitado" value={form.stockQuantity} onChange={e => setForm({ ...form, stockQuantity: e.target.value })} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Raridade</label>
+                    <select className="input w-full" value={form.rarity} onChange={e => setForm({ ...form, rarity: e.target.value })}>
+                      <option value="padrao">Padrão</option>
+                      <option value="raro">Destaque</option>
+                      <option value="epico">Especial</option>
+                      <option value="lendario">Premium</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tipo</label>
+                    <select className="input w-full" value={form.itemType} onChange={e => setForm({ ...form, itemType: e.target.value })}>
+                      <option value="fisico">Físico</option>
+                      <option value="beneficio">Benefício</option>
+                      <option value="voucher">Voucher</option>
+                      <option value="digital">Digital</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="pt-4 flex gap-3 border-t border-gray-50 mt-4">
+                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
+                  <button type="submit" className="flex-1 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-dark shadow-md hover:shadow-lg transition-all">{form.id ? 'Salvar Alterações' : 'Criar Prêmio'}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 }

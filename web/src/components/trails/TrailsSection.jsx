@@ -4,7 +4,7 @@ export default function TrailsSection({ nodes, navigate }) {
   return (
     <div className="page container">
       <h2 className="title">Trilhas de Aprendizado</h2>
-      <p className="subtitle">Complete os módulos para ganhar XP e subir de nível.</p>
+      <p className="subtitle">Complete os módulos para ganhar pontos e evoluir.</p>
       
       <div className="trail-map" style={{ marginTop: 20 }}>
         {nodes.map((node, index) => (

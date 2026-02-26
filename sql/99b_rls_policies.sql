@@ -34,6 +34,7 @@ DROP POLICY IF EXISTS users_insert_own ON users;
 DROP POLICY IF EXISTS users_admin_select_all ON users;
 DROP POLICY IF EXISTS users_admin_update_all ON users;
 DROP POLICY IF EXISTS users_admin_insert_all ON users;
+DROP POLICY IF EXISTS users_admin_delete ON users;
 
 -- Usuário vê somente seus próprios dados
 CREATE POLICY users_select_own ON users FOR SELECT
