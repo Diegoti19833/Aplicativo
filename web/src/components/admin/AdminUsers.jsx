@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Search, MoreVertical, Shield, ShieldCheck, Mail, X } from 'lucide-react';
+import { Plus, Search, MoreVertical, Shield, ShieldCheck, Mail, X, Pencil, Trash } from 'lucide-react';
 import { AdminDb } from '../../services/adminDb';
 
 export default function AdminUsers() {
@@ -7,6 +7,8 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [showNewUserModal, setShowNewUserModal] = useState(false);
   const [newUserData, setNewUserData] = useState({ name: '', email: '', role: 'Funcionário' });
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('Todas as Funções');
   const [saving, setSaving] = useState(false);
@@ -55,12 +57,47 @@ export default function AdminUsers() {
     }
   };
 
+  const openEditModal = (user) => {
+    setEditingUser({ ...user });
+    setShowEditUserModal(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser.name || !editingUser.email) return alert('Preencha nome e email');
+    try {
+      setSaving(true);
+      await AdminDb.users.update({
+        id: editingUser.id,
+        name: editingUser.name,
+        email: editingUser.email,
+        role: editingUser.role
+      });
+      setEditingUser(null);
+      setShowEditUserModal(false);
+      await loadUsers();
+    } catch (e) {
+      alert(e?.message || 'Falha ao atualizar usuário');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const toggleStatus = async (id, isActive) => {
     try {
       await AdminDb.users.setActive({ id, isActive: !isActive });
       await loadUsers();
     } catch (e) {
       alert(e?.message || 'Falha ao atualizar status');
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) return;
+    try {
+      await AdminDb.users.remove({ id });
+      await loadUsers();
+    } catch (e) {
+      alert(e?.message || 'Falha ao excluir usuário');
     }
   };
 
@@ -183,24 +220,40 @@ export default function AdminUsers() {
                   </span>
                 </td>
                 <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                  <select
-                    value={user.role}
-                    onChange={async (e) => {
-                      try {
-                        await AdminDb.users.setRole({ id: user.id, role: e.target.value });
-                        await loadUsers();
-                      } catch (err) {
-                        alert('Erro ao alterar funcao: ' + err.message);
-                      }
-                    }}
-                    style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e5e7eb', fontSize: 12, cursor: 'pointer' }}
-                  >
-                    <option value="funcionario">Funcionario</option>
-                    <option value="gerente">Gerente</option>
-                    <option value="admin">Admin</option>
-                    <option value="caixa">Caixa</option>
-                    <option value="franqueado">Franqueado</option>
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                    <button
+                      onClick={() => openEditModal(user)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                      title="Editar Usuário"
+                    >
+                      <Pencil size={18} color="#6B7280" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                      title="Excluir Usuário"
+                    >
+                      <Trash size={18} color="#EF4444" />
+                    </button>
+                    <select
+                      value={user.role}
+                      onChange={async (e) => {
+                        try {
+                          await AdminDb.users.setRole({ id: user.id, role: e.target.value });
+                          await loadUsers();
+                        } catch (err) {
+                          alert('Erro ao alterar funcao: ' + err.message);
+                        }
+                      }}
+                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e5e7eb', fontSize: 12, cursor: 'pointer' }}
+                    >
+                      <option value="funcionario">Funcionario</option>
+                      <option value="gerente">Gerente</option>
+                      <option value="admin">Admin</option>
+                      <option value="caixa">Caixa</option>
+                      <option value="franqueado">Franqueado</option>
+                    </select>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -237,8 +290,78 @@ export default function AdminUsers() {
                   <option>Franqueado</option>
                 </select>
               </div>
-              <button onClick={handleCreateUser} disabled={saving} className="btn-primary" style={{ marginTop: 8, justifyContent: 'center' }}>
+              <button 
+                onClick={handleCreateUser} 
+                disabled={saving} 
+                className="btn-primary" 
+                style={{ 
+                  marginTop: 24, 
+                  justifyContent: 'center',
+                  background: '#0047AB',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 16,
+                  width: '100%'
+                }}
+              >
                 {saving ? 'Adicionando...' : 'Adicionar Usuário'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center'
+        }}>
+          <div className="card" style={{ width: 500, padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700 }}>Editar Usuário</h3>
+              <button onClick={() => setShowEditUserModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20}/></button>
+            </div>
+            <div style={{ display: 'grid', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500 }}>Nome Completo</label>
+                <input className="input" style={{ width: '100%' }} value={editingUser.name} onChange={e => setEditingUser({...editingUser, name: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500 }}>Email Corporativo</label>
+                <input className="input" style={{ width: '100%' }} value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500 }}>Função</label>
+                <select className="input" style={{ width: '100%' }} value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value})}>
+                  <option value="funcionario">Funcionário</option>
+                  <option value="gerente">Gerente</option>
+                  <option value="admin">Admin</option>
+                  <option value="caixa">Caixa</option>
+                  <option value="franqueado">Franqueado</option>
+                </select>
+              </div>
+              <button 
+                onClick={handleUpdateUser} 
+                disabled={saving} 
+                className="btn-primary" 
+                style={{ 
+                  marginTop: 24, 
+                  justifyContent: 'center',
+                  background: '#0047AB',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 16,
+                  width: '100%'
+                }}
+              >
+                {saving ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
           </div>

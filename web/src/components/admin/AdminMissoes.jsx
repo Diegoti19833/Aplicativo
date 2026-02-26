@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Target, Plus, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
+import { Target, Plus, ToggleLeft, ToggleRight, Trash2, Edit } from 'lucide-react';
 import { AdminDb } from '../../services/adminDb';
 
 const missionTypes = [
@@ -15,6 +15,7 @@ export default function AdminMissoes() {
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingMission, setEditingMission] = useState(null);
   const [form, setForm] = useState({
     title: '', description: '', missionType: 'complete_lessons',
     targetValue: 1, xpReward: 20, coinsReward: 5, difficultyLevel: 1
@@ -34,10 +35,10 @@ export default function AdminMissoes() {
     }
   };
 
-  const handleCreate = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     try {
-      await AdminDb.missions.create({
+      const payload = {
         title: form.title,
         description: form.description,
         missionType: form.missionType,
@@ -45,13 +46,35 @@ export default function AdminMissoes() {
         xpReward: parseInt(form.xpReward),
         coinsReward: parseInt(form.coinsReward),
         difficultyLevel: parseInt(form.difficultyLevel),
-      });
+      };
+
+      if (editingMission) {
+        await AdminDb.missions.update({ id: editingMission.id, ...payload });
+      } else {
+        await AdminDb.missions.create(payload);
+      }
+
       setShowForm(false);
+      setEditingMission(null);
       setForm({ title: '', description: '', missionType: 'complete_lessons', targetValue: 1, xpReward: 20, coinsReward: 5, difficultyLevel: 1 });
       loadMissions();
     } catch (e) {
-      alert('Erro ao criar missao: ' + e.message);
+      alert('Erro ao salvar missao: ' + e.message);
     }
+  };
+
+  const handleEdit = (mission) => {
+    setEditingMission(mission);
+    setForm({
+      title: mission.title,
+      description: mission.description || '',
+      missionType: mission.mission_type,
+      targetValue: mission.target_value,
+      xpReward: mission.xp_reward,
+      coinsReward: mission.coins_reward,
+      difficultyLevel: mission.difficulty_level,
+    });
+    setShowForm(true);
   };
 
   const toggleActive = async (mission) => {
@@ -95,15 +118,15 @@ export default function AdminMissoes() {
           </h1>
           <p style={{ color: '#6B7280' }}>{missions.length} missoes cadastradas | {missions.filter(m => m.is_active).length} ativas</p>
         </div>
-        <button onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#059669', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+        <button onClick={() => { setShowForm(true); setEditingMission(null); setForm({ title: '', description: '', missionType: 'complete_lessons', targetValue: 1, xpReward: 20, coinsReward: 5, difficultyLevel: 1 }); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#059669', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
           <Plus size={16} /> Nova Missao
         </button>
       </div>
 
       {showForm && (
         <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Nova Missao Diaria</h3>
-          <form onSubmit={handleCreate} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>{editingMission ? 'Editar Missao' : 'Nova Missao Diaria'}</h3>
+          <form onSubmit={handleSave} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Titulo da missao" required style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
             <input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Descricao" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
             <select value={form.missionType} onChange={e => setForm({...form, missionType: e.target.value})} style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }}>
@@ -111,7 +134,7 @@ export default function AdminMissoes() {
             </select>
             <input type="number" value={form.targetValue} onChange={e => setForm({...form, targetValue: e.target.value})} placeholder="Meta (valor alvo)" min="1" required style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
             <input type="number" value={form.xpReward} onChange={e => setForm({...form, xpReward: e.target.value})} placeholder="Recompensa XP" min="0" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
-            <input type="number" value={form.coinsReward} onChange={e => setForm({...form, coinsReward: e.target.value})} placeholder="Recompensa Coins" min="0" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+            <input type="number" value={form.coinsReward} onChange={e => setForm({...form, coinsReward: e.target.value})} placeholder="Recompensa Popcoins" min="0" style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
             <select value={form.difficultyLevel} onChange={e => setForm({...form, difficultyLevel: e.target.value})} style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }}>
               <option value="1">Facil</option>
               <option value="2">Medio</option>
@@ -119,7 +142,7 @@ export default function AdminMissoes() {
             </select>
             <div />
             <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8 }}>
-              <button type="submit" style={{ background: '#059669', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Criar Missao</button>
+              <button type="submit" style={{ background: '#059669', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>{editingMission ? 'Salvar Alterações' : 'Criar Missao'}</button>
               <button type="button" onClick={() => setShowForm(false)} style={{ background: '#f3f4f6', color: '#374151', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer' }}>Cancelar</button>
             </div>
           </form>
@@ -137,10 +160,13 @@ export default function AdminMissoes() {
                   <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{mission.description}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => toggleActive(mission)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                  <button onClick={() => handleEdit(mission)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} title="Editar">
+                    <Edit size={18} color="#0047AB" />
+                  </button>
+                  <button onClick={() => toggleActive(mission)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} title={mission.is_active ? 'Desativar' : 'Ativar'}>
                     {mission.is_active ? <ToggleRight size={20} color="#059669" /> : <ToggleLeft size={20} color="#DC2626" />}
                   </button>
-                  <button onClick={() => removeMission(mission)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                  <button onClick={() => removeMission(mission)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} title="Excluir">
                     <Trash2 size={16} color="#DC2626" />
                   </button>
                 </div>
@@ -148,7 +174,7 @@ export default function AdminMissoes() {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
                 <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#EFF6FF', color: '#0047AB', fontWeight: 600 }}>{missionTypeLabel(mission.mission_type)}</span>
                 <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#F3F4F6', color: '#374151' }}>Meta: {mission.target_value}</span>
-                <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#FEF3C7', color: '#D97706', fontWeight: 600 }}>{mission.xp_reward} XP + {mission.coins_reward} coins</span>
+                <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#FEF3C7', color: '#D97706', fontWeight: 600 }}>{mission.xp_reward} XP + {mission.coins_reward} Popcoins</span>
                 <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: diff.bg, color: diff.color, fontWeight: 600 }}>{diff.text}</span>
                 <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: mission.is_active ? '#D1FAE5' : '#FEE2E2', color: mission.is_active ? '#059669' : '#DC2626' }}>
                   {mission.is_active ? 'Ativa' : 'Inativa'}

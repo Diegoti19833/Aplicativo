@@ -122,7 +122,7 @@ export default function AdminLoja() {
               <option value="special">Especial</option>
               <option value="cosmetic">Cosmetico</option>
             </select>
-            <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} placeholder="Preco (coins)" min="1" required style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+            <input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} placeholder="Preco (Popcoins)" min="1" required style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }} />
             <select value={form.rarity} onChange={e => setForm({...form, rarity: e.target.value})} style={{ padding: 10, borderRadius: 8, border: '1px solid #e5e7eb' }}>
               <option value="common">Comum</option>
               <option value="rare">Raro</option>
@@ -159,7 +159,7 @@ export default function AdminLoja() {
                 <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{item.name || item.title}</div>
                 <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>{item.description}</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#FEF3C7', color: '#D97706', fontWeight: 600 }}>{item.price} coins</span>
+                  <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#FEF3C7', color: '#D97706', fontWeight: 600 }}>{item.price} Popcoins</span>
                   <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: rarity.bg, color: rarity.color, fontWeight: 600 }}>{item.rarity}</span>
                   {item.stock_quantity != null && (
                     <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 12, background: '#F3F4F6', color: '#374151' }}>Estoque: {item.stock_quantity}</span>
@@ -200,7 +200,7 @@ export default function AdminLoja() {
                     <span>{p.item?.icon} {p.item?.name || p.item?.title || '-'}</span>
                   </td>
                   <td style={{ padding: '12px 8px', textAlign: 'right' }}>{p.quantity}</td>
-                  <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 600 }}>{p.total_price} coins</td>
+                  <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 600 }}>{p.total_price} Popcoins</td>
                 </tr>
               ))}
             </tbody>

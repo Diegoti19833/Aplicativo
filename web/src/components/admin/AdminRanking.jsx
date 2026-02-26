@@ -59,7 +59,7 @@ export default function AdminRanking() {
   });
 
   const exportCSV = () => {
-    const headers = ['Posicao,Nome,Email,Funcao,XP,Nivel,Coins,Streak,Aulas,Quizzes'];
+    const headers = ['Posicao,Nome,Email,Funcao,XP,Nivel,Popcoins,Streak,Aulas,Quizzes'];
     const rows = filtered.map(u =>
       `${u.position},"${u.name}","${u.email}",${roleLabel(u.role)},${u.total_xp},${u.level},${u.coins},${u.current_streak},${u.lessons_completed},${u.quizzes_completed}`
     );

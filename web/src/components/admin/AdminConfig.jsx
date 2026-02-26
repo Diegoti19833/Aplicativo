@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Bell, Globe, Shield, Palette } from 'lucide-react';
+import { Save, Bell, Globe, Shield, Palette, Database } from 'lucide-react';
 import { AdminDb } from '../../services/adminDb';
 
 export default function AdminConfig() {
@@ -13,6 +13,7 @@ export default function AdminConfig() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     loadConfig();
@@ -199,6 +200,42 @@ export default function AdminConfig() {
                   }} />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Database Maintenance Section */}
+          <div className="card" style={{ padding: 24 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Database size={20} color="#0047AB" />
+              Manutenção do Banco de Dados
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontWeight: 600 }}>Gerar Dados de Teste</div>
+                <div style={{ fontSize: 12, color: '#6B7280' }}>
+                  Preenche o banco com trilhas, aulas e missões de exemplo.
+                  <br/>Útil para testar a integração do painel.
+                </div>
+              </div>
+              <button 
+                onClick={async () => {
+                  if(!window.confirm('Isso irá criar dados de exemplo. Deseja continuar?')) return;
+                  try {
+                    setSeeding(true);
+                    await AdminDb.setup.seedData();
+                    alert('Dados gerados com sucesso! Recarregue a página.');
+                  } catch (e) {
+                    alert('Erro ao gerar dados: ' + e.message);
+                  } finally {
+                    setSeeding(false);
+                  }
+                }}
+                className="btn-secondary"
+                disabled={seeding}
+                style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #E5E7EB', background: 'white', cursor: 'pointer' }}
+              >
+                {seeding ? 'Gerando...' : 'Gerar Dados'}
+              </button>
             </div>
           </div>
         </div>

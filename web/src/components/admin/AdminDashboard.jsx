@@ -23,6 +23,21 @@ function DashboardHome() {
   const [overview, setOverview] = useState(null);
   const [trails, setTrails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+
+  const handleSeed = async () => {
+    if (confirm('Tem certeza que deseja gerar dados ficticios? Isso pode levar alguns segundos.')) {
+      setGenerating(true);
+      try {
+        await AdminDb.setup.seedData();
+        window.location.reload(); 
+      } catch (e) {
+        alert('Erro ao gerar dados: ' + e.message);
+      } finally {
+        setGenerating(false);
+      }
+    }
+  };
 
   useEffect(() => {
     let alive = true;
@@ -75,9 +90,26 @@ function DashboardHome() {
 
   return (
     <div style={{ padding: 32 }}>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Visao Geral do Sistema</h1>
-        <p style={{ color: '#6B7280' }}>Dados em tempo real do seu app de gamificacao.</p>
+      <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Visao Geral do Sistema</h1>
+          <p style={{ color: '#6B7280' }}>Dados em tempo real do seu app de gamificacao.</p>
+        </div>
+        <button 
+          onClick={handleSeed}
+          disabled={generating}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#0047AB',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            cursor: generating ? 'not-allowed' : 'pointer',
+            opacity: generating ? 0.7 : 1
+          }}
+        >
+          {generating ? 'Gerando...' : 'Gerar Dados Ficticios'}
+        </button>
       </div>
 
       {/* KPIs */}
@@ -139,7 +171,7 @@ function DashboardHome() {
             </div>
             <div style={{ background: '#FEF3C7', borderRadius: 12, padding: 16, textAlign: 'center' }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: '#D97706' }}>{kpis.coinsSpent.toLocaleString()}</div>
-              <div style={{ fontSize: 12, color: '#6B7280' }}>Coins Gastos</div>
+              <div style={{ fontSize: 12, color: '#6B7280' }}>Popcoins Gastos</div>
             </div>
           </div>
         </div>
