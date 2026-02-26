@@ -15,6 +15,7 @@ import { supabase } from './lib/supabase'
 import VideoPlayer from './components/VideoPlayer'
 import InteractiveQuiz from './components/InteractiveQuiz'
 import QuizGame from './components/QuizGame'
+import PetClassLogo from './components/PetClassLogo'
 
 // --- CONSTANTS & THEME ---
 const COLORS = {
@@ -225,7 +226,7 @@ function LoginScreen({ onLogin }) {
         {/* ─── Mascot Hero Section ─── */}
         <Animated.View style={{
           alignItems: 'center',
-          marginBottom: 8,
+          marginBottom: 24,
           transform: [{ scale: mascotScale }, { translateY: mascotBounce }],
         }}>
           {/* Green glow behind mascot */}
@@ -248,13 +249,10 @@ function LoginScreen({ onLogin }) {
         </Animated.View>
 
         {/* ─── Brand Name ─── */}
-        <View style={{ alignItems: 'center', marginBottom: 24 }}>
-          <Text style={{
-            fontSize: 32, fontWeight: '900', color: '#129151',
-            letterSpacing: -0.5,
-          }}>PET CLASS</Text>
+        <View style={{ alignItems: 'center', marginBottom: 28 }}>
+          <PetClassLogo scale={1.2} type="dark" />
           <View style={{
-            flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4,
+            flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14,
           }}>
             <View style={{ width: 20, height: 2, backgroundColor: '#129151', borderRadius: 1, opacity: 0.4 }} />
             <Text style={{
@@ -419,8 +417,9 @@ function LoginScreen({ onLogin }) {
         </Animated.View>
 
         {/* ─── Footer ─── */}
-        <View style={{ alignItems: 'center', marginTop: 24, opacity: 0.5 }}>
-          <Text style={{ fontSize: 11, color: '#6B7280' }}>© 2026 Pet Class • Todos os direitos reservados</Text>
+        <View style={{ alignItems: 'center', marginTop: 24, opacity: 0.7 }}>
+          <PetClassLogo scale={0.5} type="dark" />
+          <Text style={{ fontSize: 11, color: '#6B7280', marginTop: 6 }}>© 2026 Pet Class • Todos os direitos reservados</Text>
         </View>
 
       </ScrollView>

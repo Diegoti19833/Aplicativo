@@ -466,7 +466,7 @@ export default function AdminTrilhas() {
           </div>
           <button
             onClick={() => setShowNewTrailModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[#129151] text-white rounded-lg hover:bg-[#0B6E3D] transition-colors font-medium shadow-sm"
           >
             <Plus size={20} />
             Nova Trilha

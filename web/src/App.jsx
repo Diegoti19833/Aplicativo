@@ -15,6 +15,8 @@ import Login from './components/Login'
 import { AdminDb } from './services/adminDb'
 import { isSupabaseConfigured } from './services/supabaseClient'
 
+import PetClassLogo from './components/PetClassLogo'
+
 // --- Components ---
 
 function Sidebar() {
@@ -25,12 +27,7 @@ function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 z-10 flex flex-col">
       <div className="h-16 flex items-center px-6 border-b border-gray-100">
-        <div className="flex items-center gap-2 text-brand font-bold text-xl">
-          <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-white">
-            <Award size={20} />
-          </div>
-          PET CLASS
-        </div>
+        <PetClassLogo type="dark" size="normal" />
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">

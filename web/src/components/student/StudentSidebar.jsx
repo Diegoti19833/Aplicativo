@@ -4,6 +4,7 @@ import {
     ChevronRight, Bell, Zap, Menu, X, ShieldCheck
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import PetClassLogo from '../PetClassLogo';
 
 export default function StudentSidebar({ isOpen, setIsOpen }) {
     const navigate = useNavigate();
@@ -39,13 +40,8 @@ export default function StudentSidebar({ isOpen, setIsOpen }) {
       `}>
                 <div className="flex flex-col h-full">
                     {/* Logo */}
-                    <div className="p-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
-                                P
-                            </div>
-                            <span className="font-bold text-xl text-gray-800 tracking-tight">PET CLASS</span>
-                        </div>
+                    <div className="p-6 flex items-center justify-between border-b border-gray-50/50">
+                        <PetClassLogo type="dark" size="normal" />
                         <button onClick={() => setIsOpen(false)} className="md:hidden text-gray-400">
                             <X size={24} />
                         </button>

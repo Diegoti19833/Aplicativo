@@ -18,6 +18,7 @@ import AdminTrilhas from './AdminTrilhas';
 import AdminUsers from './AdminUsers';
 import AdminRelatorios from './AdminRelatorios';
 import AdminConfig from './AdminConfig';
+import PetClassLogo from '../PetClassLogo';
 import AdminRanking from './AdminRanking';
 import AdminLoja from './AdminLoja';
 import AdminMissoes from './AdminMissoes';
@@ -704,17 +705,16 @@ function AdminDashboardInner() {
       {/* Sidebar Dark Glass */}
       <aside className={`${sidebarW} sidebar-transition bg-[#0B1120] text-white border-r border-white/5 flex flex-col fixed h-full z-40 shadow-2xl overflow-hidden`}>
         {/* Logo */}
-        <div className={`h-24 flex items-center border-b border-white/5 flex-shrink-0 relative overflow-hidden ${collapsed ? 'justify-center px-0' : 'px-8 gap-4'}`}>
+        <div className={`h-24 flex items-center border-b border-white/5 flex-shrink-0 relative overflow-hidden ${collapsed ? 'justify-center px-0' : 'px-8 gap-1'}`}>
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-green-900/20 to-transparent pointer-events-none" />
-          <div className="relative z-10 w-10 h-10 bg-gradient-to-br from-[#129151] to-[#0B6E3D] rounded-xl flex items-center justify-center text-white shadow-lg shadow-green-600/40 flex-shrink-0 animate-pulse-slow">
-            <Award size={22} className="text-white fill-current" />
+
+          <div className="relative z-10 transition-transform duration-300">
+            <PetClassLogo
+              type="light"
+              size={collapsed ? 'small' : 'normal'}
+              iconOnly={collapsed}
+            />
           </div>
-          {!collapsed && (
-            <div className="relative z-10 flex flex-col">
-              <span className="font-bold text-xl tracking-tight text-white leading-none">PET CLASS</span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-green-400 font-bold mt-1.5 opacity-80">Admin Panel</span>
-            </div>
-          )}
         </div>
 
         {/* Nav */}

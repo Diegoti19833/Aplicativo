@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, AlertCircle, Loader2, ShieldCheck, PawPrint, GraduationCap, BookOpen, Trophy, Sparkles } from 'lucide-react';
 import { AdminDb } from '../services/adminDb';
 import { isSupabaseConfigured } from '../services/supabaseClient';
+import PetClassLogo from './PetClassLogo';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -83,15 +84,8 @@ export default function Login() {
         <div className="relative z-10 flex flex-col items-center justify-center w-full px-12">
 
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg">
-              <PawPrint size={28} className="text-white" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-black text-white tracking-tight leading-none">PET</h2>
-              <h2 className="text-3xl font-black tracking-tight leading-none"
-                style={{ color: '#6EE7B7' }}>CLASS</h2>
-            </div>
+          <div className="flex justify-center mb-8">
+            <PetClassLogo type="light" size="xl" />
           </div>
 
           {/* Mascot Image */}
@@ -146,11 +140,7 @@ export default function Login() {
 
         {/* Mobile logo (visible on small screens) */}
         <div className="lg:hidden absolute top-6 left-6 flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
-            style={{ background: 'linear-gradient(135deg, #0B6E3D, #129151)' }}>
-            <PawPrint size={20} className="text-white" />
-          </div>
-          <span className="text-lg font-bold text-slate-800">Pet Class</span>
+          <PetClassLogo type="dark" size="small" />
         </div>
 
         <div className="relative z-10 w-full max-w-[420px] px-6 sm:px-8">
