@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
     avatar_url TEXT,
-    role VARCHAR(50) NOT NULL DEFAULT 'funcionario' CHECK (role IN ('funcionario', 'gerente', 'admin')),
+    role VARCHAR(50) NOT NULL DEFAULT 'funcionario' CHECK (role IN ('funcionario', 'gerente', 'admin', 'caixa', 'franqueado')),
     total_xp INTEGER DEFAULT 0,
     coins INTEGER DEFAULT 100,
     current_streak INTEGER DEFAULT 0,

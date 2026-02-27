@@ -73,10 +73,9 @@ BEGIN
     
     -- Contar aulas completadas
     SELECT COUNT(*) INTO completed_lessons
-    FROM user_progress 
-    WHERE user_id = user_uuid 
-      AND progress_type = 'lesson' 
-      AND completion_percentage = 100;
+    FROM user_progress
+    WHERE user_id = user_uuid
+      AND progress_type = 'lesson_completed';
     
     -- Contar quizzes completados (corretos)
     SELECT COUNT(*) INTO completed_quizzes
