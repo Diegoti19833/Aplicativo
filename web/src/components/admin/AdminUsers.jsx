@@ -6,7 +6,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNewUserModal, setShowNewUserModal] = useState(false);
-  const [newUserData, setNewUserData] = useState({ name: '', email: '', role: 'Funcionário' });
+  const [newUserData, setNewUserData] = useState({ name: '', email: '', role: 'funcionario' });
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [search, setSearch] = useState('');
@@ -284,10 +284,10 @@ export default function AdminUsers() {
               <div>
                 <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500 }}>Função</label>
                 <select className="input" style={{ width: '100%' }} value={newUserData.role} onChange={e => setNewUserData({...newUserData, role: e.target.value})}>
-                  <option>Funcionário</option>
-                  <option>Gerente</option>
-                  <option>Caixa</option>
-                  <option>Franqueado</option>
+                  <option value="funcionario">Funcionário</option>
+                  <option value="gerente">Gerente</option>
+                  <option value="caixa">Caixa</option>
+                  <option value="franqueado">Franqueado</option>
                 </select>
               </div>
               <button 

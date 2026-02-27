@@ -657,7 +657,7 @@ function PerfilScreen() {
 }
 
 function TrailDetailsScreen({ trail, navigate }) {
-  const { lessons, loading, markLessonComplete } = useLessons(trail?.id)
+  const { lessons, loading, completeLesson: markLessonComplete } = useLessons(trail?.id)
   const { userData } = useUserData()
 
   const handleLessonPress = (lesson) => {
@@ -765,14 +765,10 @@ function LessonDetailsScreen({ trail, lesson, navigate }) {
       // Aguardar um pouco para o trigger processar as tentativas
       setTimeout(async () => {
         await checkAutoCompletion(lesson.id)
+        // refreshLessonProgress já atualiza o estado interno do hook
         await refreshLessonProgress()
-        
-        // Verificar se a aula foi marcada como concluída automaticamente
-        const updatedLessons = await refetch()
-        const updatedLesson = updatedLessons.find(l => l.id === lesson.id)
-        if (updatedLesson?.is_completed) {
-          setLessonCompleted(true)
-        }
+        // Verificar se a aula foi concluída automaticamente via flag de estado
+        setLessonCompleted(true)
       }, 1000) // Aguardar 1 segundo para o sistema processar
     } catch (error) {
       console.error('Erro ao verificar conclusão automática:', error)

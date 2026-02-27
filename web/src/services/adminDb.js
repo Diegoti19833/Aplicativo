@@ -364,7 +364,6 @@ export const AdminDb = {
         const { count: lessonsCompleted } = await supabase.from('user_progress')
           .select('*', { count: 'exact', head: true })
           .eq('progress_type', 'lesson_completed')
-          .eq('is_completed', true)
           
         const { count: newUsers } = await supabase.from('users')
           .select('*', { count: 'exact', head: true })
