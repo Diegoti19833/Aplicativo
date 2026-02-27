@@ -40,12 +40,8 @@ BEGIN
     END IF;
     
     -- Processar a compra
+    -- Nota: o trigger process_purchase em user_purchases debita as moedas automaticamente
     BEGIN
-        -- Debitar moedas do usuário
-        UPDATE users 
-        SET coins = coins - total_cost
-        WHERE id = user_id_param;
-        
         -- Registrar a compra (usando a estrutura correta da tabela)
         INSERT INTO user_purchases (
             user_id, 

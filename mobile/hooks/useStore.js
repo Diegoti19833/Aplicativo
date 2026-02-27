@@ -120,7 +120,7 @@ export function useStore() {
 
   const getItemUsageCount = (itemId) => {
     const userItem = userItems.find(ui => ui.item_id === itemId)
-    return userItem ? userItem.usage_count : 0
+    return userItem ? userItem.quantity : 0
   }
 
   useEffect(() => {
